@@ -729,9 +729,9 @@ def plot_summary_card(records, dataset_name, class_counts=None):
 # ══════════════════════════════════════════════════════════════════════════════
 
 def inspect_rdd2022():
-    logger.info("── RDD2022 ─────────────────────────────────────────")
+    print("\n── RDD2022 ─────────────────────────────────────────")
 
-    DATASET_DIR = ROOT / "data" / "datasets" / "rdd2022"
+    DATASET_DIR = DATASETS_DIR / "rdd2022"
     TRAIN_IMGS  = DATASET_DIR / "train" / "images"
     TRAIN_LBLS  = DATASET_DIR / "train" / "labels"
     OUT_DIR     = Path(OUTPUT_DIR)
@@ -751,7 +751,7 @@ def inspect_rdd2022():
 
     # ── Load YOLO labels ──────────────────────────────────────────
     label_files = sorted(TRAIN_LBLS.glob("*.txt"))
-    logger.info(f"  Found {len(label_files)} label files in train/labels/")
+    print(f"  Found {len(label_files)} label files in train/labels/")
 
     records     = []
     class_counts = {i: 0 for i in range(4)}
@@ -776,11 +776,11 @@ def inspect_rdd2022():
 
         records.append({"image_path": img_path, "boxes": boxes})
 
-    logger.info(f"  Loaded {len(records)} image/label pairs")
-    logger.info(f"  Class distribution: { {CLASS_NAMES[k]: v for k, v in class_counts.items()} }")
+    print(f"  Loaded {len(records)} image/label pairs")
+    print(f"  Class distribution: { {CLASS_NAMES[k]: v for k, v in class_counts.items()} }")
 
     if not records:
-        logger.warning("  No records found — check dataset path.")
+        print.warning("  No records found — check dataset path.")
         return
 
     # ── Plot 1: Sample images with bounding boxes ─────────────────
@@ -823,7 +823,7 @@ def inspect_rdd2022():
     out_path = OUT_DIR / "RDD2022_01_sample_images.png"
     plt.savefig(out_path, dpi=100, bbox_inches="tight", facecolor="#0D0F1A")
     plt.close()
-    logger.info(f"  Saved -> RDD2022_01_sample_images.png")
+    print(f"  Saved -> RDD2022_01_sample_images.png")
 
     # ── Plot 2: Class distribution bar chart ──────────────────────
     fig, ax = plt.subplots(figsize=(10, 5))
@@ -854,7 +854,7 @@ def inspect_rdd2022():
     out_path = OUT_DIR / "RDD2022_02_class_distribution.png"
     plt.savefig(out_path, dpi=100, bbox_inches="tight", facecolor="#0D0F1A")
     plt.close()
-    logger.info(f"  Saved -> RDD2022_02_class_distribution.png")
+    print(f"  Saved -> RDD2022_02_class_distribution.png")
 
     # ── Plot 3: Bounding box size distribution ────────────────────
     all_boxes = [b for r in records for b in r["boxes"]]
@@ -888,9 +888,9 @@ def inspect_rdd2022():
     out_path = OUT_DIR / "RDD2022_03_bbox_distribution.png"
     plt.savefig(out_path, dpi=100, bbox_inches="tight", facecolor="#0D0F1A")
     plt.close()
-    logger.info(f"  Saved -> RDD2022_03_bbox_distribution.png")
+    print(f"  Saved -> RDD2022_03_bbox_distribution.png")
 
-    logger.info(f"  -> RDD2022 plots saved to {OUT_DIR}")
+    print(f"  -> RDD2022 plots saved to {OUT_DIR}")
 def inspect_cfd():
     dataset_dir = DATASETS_DIR / "cfd"
     if not dataset_dir.exists():
