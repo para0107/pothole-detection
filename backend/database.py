@@ -88,8 +88,9 @@ def get_db_session():
 def check_connection():
     """Quick health check — call at startup to confirm DB is reachable."""
     try:
+        from sqlalchemy import text
         with engine.connect() as conn:
-            conn.execute("SELECT 1")
+            conn.execute(text("SELECT 1"))
         logger.info("Database connection OK.")
         return True
     except Exception as e:
