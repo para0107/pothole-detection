@@ -6,3 +6,5 @@ data/*
 !data/inspection_plots/
 !data/inspection_plots/**
 rtdetr-l.pt
+runs
+yolov8n.pt
