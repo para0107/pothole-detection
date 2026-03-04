@@ -608,5 +608,5 @@ Model citations: RT-DETR (Zhao et al., 2023), SAM (Kirillov et al., 2023), Monod
 ---
 
 <div align="center">
-<i>Built for Cluj-Napoca · Babeș-Bolyai University · 2025</i>
+<i>Built for Cluj-Napoca · Babeș-Bolyai University · 2026</i>
 </div>
