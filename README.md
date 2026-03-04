@@ -7,8 +7,7 @@
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.2-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL+PostGIS-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://postgis.net)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL+PostGIS-15-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://postgis.net)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
 
 **Bachelor's Thesis — Babeș-Bolyai University, Faculty of Computer Science**
@@ -22,97 +21,123 @@
 
 ## Overview
 
-Cluj Road Intelligence System (CRIS) is an end-to-end urban infrastructure monitoring platform that automatically detects, classifies, and prioritizes road damage from smartphone dashcam footage. The system processes raw video surveys of Cluj-Napoca streets through a 9-stage machine learning pipeline, enriches each detection with 26 features covering geometry, depth, severity, lighting, weather, and infrastructure context, and presents findings through an interactive municipal dashboard designed for City Hall decision-making.
+Cluj Road Intelligence System (CRIS) is an end-to-end urban infrastructure monitoring platform that automatically detects, classifies, and prioritizes road damage from smartphone dashcam footage. The system processes raw video surveys of Cluj-Napoca streets through a 9-stage machine learning pipeline, enriches each detection with spatial, depth, severity, lighting, weather, and infrastructure context features, and exposes the results through a REST API backed by a PostGIS spatial database.
 
-The goal is to replace expensive, infrequent, and subjective manual road inspections with a low-cost, automated, data-driven alternative — a dashcam, a GPS logger, and an overnight processing run.
+The goal is to replace expensive, infrequent, and subjective manual road inspections with a low-cost automated alternative — a dashcam, a GPS logger, and an overnight processing run.
 
 ---
 
 ## Motivation
 
-Romania has one of the highest road accident rates in the European Union. Deteriorating urban road infrastructure is a significant contributing factor. Traditional road condition surveys in Cluj-Napoca rely on manual inspection — expensive, infrequent, and subjective. A full survey of the city road network can take months.
+Romania has one of the highest road accident rates in the European Union. Deteriorating urban road infrastructure is a significant contributing factor. Traditional road condition surveys in Cluj-Napoca rely on manual inspection — expensive, infrequent, and subjective. A full city-wide survey can take months.
 
-This project proposes an automated alternative that any municipality can adopt with minimal hardware investment. Survey footage collected during normal city vehicle operations can be processed automatically every night, producing a continuously updated georeferenced damage map with severity scores and ranked repair lists.
+This project proposes an automated alternative that any municipality can adopt with minimal hardware investment. Survey footage collected during normal vehicle operations can be processed automatically every night, producing a continuously updated georeferenced damage map with severity scores and ranked repair lists.
 
 ---
 
 ## System Architecture
 
-The system consists of a 9-stage inference pipeline, a machine learning training subsystem, a PostgreSQL + PostGIS database, a FastAPI REST backend, and a React dashboard.
+The system has four distinct layers:
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                       PRE-SURVEY                                 │
-│          ACO Route Planning (osmnx + Cluj OSM network)          │
-│          Finds optimal driving route covering all roads          │
-└─────────────────────────┬────────────────────────────────────────┘
-                          │
-┌─────────────────────────▼────────────────────────────────────────┐
-│  STAGE 1 — Preprocessor                    [preprocessor.py]     │
-│  • Extract frames from .mp4 (1 per 0.5 seconds)                 │
-│  • Sync GPS coordinates from .gpx to each frame timestamp        │
-│  • Compute sun angle per frame (pysolar)                         │
-│  • Classify lighting: daylight / overcast / low_light            │
-└─────────────────────────┬────────────────────────────────────────┘
-                          │
-┌─────────────────────────▼────────────────────────────────────────┐
-│  STAGE 2 — Detector                           [detector.py]      │
-│  • RT-DETR-L inference on each frame (640×640)                   │
-│  • Test Time Augmentation: flip + rotate, averaged predictions   │
-│  • Confidence threshold: discard detections < 0.5               │
-│  • 5 output classes (see Detection Classes section)              │
-└─────────────────────────┬────────────────────────────────────────┘
-                          │
-┌─────────────────────────▼────────────────────────────────────────┐
-│  STAGE 3 — Segmentor                         [segmentor.py]      │
-│  • RT-DETR bounding boxes used as SAM box prompts                │
-│  • SAM outputs pixel-level mask per detection                    │
-│  • Computes: surface_area, edge_sharpness,                       │
-│    interior_contrast, mask_compactness                           │
-└─────────────────────────┬────────────────────────────────────────┘
-                          │
-┌─────────────────────────▼────────────────────────────────────────┐
-│  STAGE 4 — Depth Estimator              [depth_estimator.py]     │
-│  • EfficientNet-B3 regression → depth in cm (primary path)       │
-│  • Monodepth2 dense depth map → depth at detection region        │
-│  • Both estimates fused for final depth_estimate                 │
-│  • Fallback: mask geometry proxy (low_light / low confidence)    │
-└─────────────────────────┬────────────────────────────────────────┘
-                          │
-┌─────────────────────────▼────────────────────────────────────────┐
-│  STAGE 5 — Severity Classifier        [severity_classifier.py]   │
-│  • XGBoost on WOA-selected feature subset → S1 through S5        │
-│  • Fallback: rule-based (depth + area) until Cluj data ready     │
-└─────────────────────────┬────────────────────────────────────────┘
-                          │
-┌─────────────────────────▼────────────────────────────────────────┐
-│  STAGE 6 — Enricher                          [enricher.py]       │
-│  • Nominatim API     → street_name (reverse geocoding)           │
-│  • OSM Overpass API  → road_importance, infra_proximity          │
-│  • Open-Meteo API    → weather at detection timestamp            │
-└─────────────────────────┬────────────────────────────────────────┘
-                          │
-┌─────────────────────────▼────────────────────────────────────────┐
-│  STAGE 7 — Deduplicator                   [deduplicator.py]      │
-│  • DBSCAN spatial clustering (2m radius)                         │
-│  • Merges duplicate detections from multiple survey passes       │
-│  • PostGIS upsert: UPDATE existing or INSERT new record          │
-│  • Updates deterioration_rate and detection_count across runs    │
-└─────────────────────────┬────────────────────────────────────────┘
-                          │
-┌─────────────────────────▼────────────────────────────────────────┐
-│  STAGE 8 — Database                  [PostgreSQL + PostGIS]      │
-│  • 26-column detections table                                    │
-│  • GIST spatial index on geom column                             │
-│  • Full temporal tracking across survey runs                     │
-└─────────────────────────┬────────────────────────────────────────┘
-                          │
-┌─────────────────────────▼────────────────────────────────────────┐
-│  STAGE 9 — Dashboard             [FastAPI + React + Leaflet]     │
-│  • Interactive map, severity filters, priority repair list       │
-│  • Per-detection detail panel with all 26 features               │
-│  • Automated daily pipeline trigger (APScheduler)                │
-└──────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  LAYER 1 — ML Training          (ml/)                           │
+│  RT-DETR-L · SAM · EfficientNet-B3 · Monodepth2 · XGBoost      │
+│  PSO hyperparameter search · dataset preparation                │
+└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  LAYER 2 — Inference Pipeline   (pipeline/ · scripts/)          │
+│  Frame extraction → Detection → Segmentation → Depth →         │
+│  Severity → Enrichment → Deduplication → DB write               │
+│  Triggered manually (run_survey.py) or nightly (daily_job.py)  │
+└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  LAYER 3 — Backend API          (backend/)                      │
+│  FastAPI · SQLAlchemy · PostGIS · Pydantic v2                   │
+│  Routes: detections · stats · heatmap · priority                │
+└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  LAYER 4 — Frontend             (frontend/)                     │
+│  Interactive map · Severity filters · Priority repair list      │
+│  (currently placeholder — React dashboard planned)              │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Inference Pipeline — Stage by Stage
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  PRE-SURVEY: ACO Route Planning                                 │
+│  Ant Colony Optimization over Cluj-Napoca OSM road network      │
+│  Finds minimum-distance route covering all primary/secondary    │
+│  roads before the survey drive                                  │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────────┐
+│  STAGE 1 — Preprocessor              [preprocessor.py]          │
+│  • Extract frames from .mp4 (1 per 0.5 seconds)                │
+│  • Sync GPS coordinates from .gpx to each frame timestamp       │
+│  • Compute sun angle per frame (pysolar)                        │
+│  • Classify lighting: daylight / overcast / low_light           │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────────┐
+│  STAGE 2 — Detector                  [detector.py]              │
+│  • RT-DETR-L inference on each frame (640×640)                  │
+│  • Test Time Augmentation: flip + rotate, averaged predictions  │
+│  • Confidence threshold: discard detections < 0.5              │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────────┐
+│  STAGE 3 — Segmentor                 [segmentor.py]             │
+│  • RT-DETR bounding boxes → SAM box prompts                     │
+│  • SAM outputs pixel-level mask per detection                   │
+│  • Computes: surface_area, edge_sharpness,                      │
+│    interior_contrast, mask_compactness                          │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────────┐
+│  STAGE 4 — Depth Estimator           [depth_estimator.py]       │
+│  • EfficientNet-B3 regression → depth in cm                     │
+│  • Monodepth2 dense depth map → depth at detection region       │
+│  • Both estimates fused for final depth_estimate                │
+│  • Fallback: mask geometry proxy when depth_confidence < 0.4   │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────────┐
+│  STAGE 5 — Severity Classifier       [severity_classifier.py]   │
+│  • XGBoost on WOA-selected feature subset → S1–S5               │
+│  • Rule-based fallback (depth + area) until Cluj data ready     │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────────┐
+│  STAGE 6 — Enricher                  [enricher.py]              │
+│  • Nominatim API    → street_name                               │
+│  • OSM Overpass API → road_importance, infra_proximity          │
+│  • Open-Meteo API   → weather at detection timestamp            │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────────┐
+│  STAGE 7 — Deduplicator              [deduplicator.py]          │
+│  • DBSCAN spatial clustering (2m radius)                        │
+│  • Merges duplicates from multiple survey passes                │
+│  • PostGIS upsert: UPDATE existing or INSERT new                │
+│  • Updates detection_count and deterioration_rate               │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────────┐
+│  STAGE 8 — Database          [PostgreSQL 15 + PostGIS]          │
+│  • detections table — all ML-derived attributes + geometry      │
+│  • survey_log table — tracks each pipeline run                  │
+│  • GIST spatial index on geom column                            │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────────┐
+│  STAGE 9 — Backend API + Dashboard   [FastAPI + frontend/]      │
+│  • REST API reads from PostGIS                                   │
+│  • Routes: detections · stats · heatmap · priority              │
+│  • Daily pipeline trigger via APScheduler (02:00 Bucharest TZ)  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -121,7 +146,7 @@ The system consists of a 9-stage inference pipeline, a machine learning training
 
 ### Detection — RT-DETR-L
 
-**RT-DETR-L** (Real-Time Detection Transformer, Large) is a transformer-based object detector that outperforms YOLO-series models on accuracy while maintaining real-time inference. It replaces the traditional anchor-based detection head with a transformer decoder, eliminating NMS post-processing.
+**RT-DETR-L** (Real-Time Detection Transformer, Large) is a transformer-based object detector that outperforms YOLO-series models on accuracy while maintaining real-time inference. It replaces the anchor-based detection head with a transformer decoder, eliminating NMS post-processing.
 
 | Property | Value |
 |---|---|
@@ -143,19 +168,21 @@ The system consists of a 9-stage inference pipeline, a machine learning training
 
 **Training strategy:**
 - **Phase 1** (10 epochs): Frozen backbone — only decoder and detection head trained. LR = 1e-4.
-- **Phase 2** (50 epochs): Full fine-tune — backbone unfrozen, LR drops to 1e-5. Early stopping patience = 20.
+- **Phase 2** (50 epochs): Full fine-tune — backbone unfrozen, LR = 1e-5. Early stopping patience = 20.
 - **SWA**: Stochastic Weight Averaging over last 5 checkpoints → `swa.pt`.
+
+Checkpoint priority at evaluation and inference: `swa.pt` > `best.pt` > `rtdetr_l_rdd2022.pt`.
 
 **Training techniques:**
 - Focal Loss (γ=2.0, built into RT-DETR) for class imbalance
-- Mixup augmentation (α=0.15) and Mosaic augmentation
+- Mixup (α=0.15) and Mosaic augmentation
 - Albumentations pipeline (HSV jitter, rotation, scale, shear, horizontal flip)
-- Test Time Augmentation at inference (flip + rotate)
+- Test Time Augmentation at inference (flip + rotate, averaged)
 - fp16 AMP, gradient accumulation ×4 (effective batch = 16)
 - `cudnn.benchmark = True`, `deterministic = False`
 
 **Hyperparameter optimization — PSO:**
-Particle Swarm Optimization searches a 7-dimensional space (`lr0`, `weight_decay`, `warmup_epochs`, `mosaic`, `mixup`, `box`, `cls`) with 15 particles over 10 iterations. Best config saved to `ml/optimization/pso_best.json` and auto-loaded on the next training run.
+Particle Swarm Optimization searches a 7-dimensional space (`lr0`, `weight_decay`, `warmup_epochs`, `mosaic`, `mixup`, `box`, `cls`) with 15 particles over 10 iterations. Each particle is evaluated by training for 5 epochs and measuring validation mAP50-95. Output saved to `ml/optimization/pso_best.json` — `train.py` loads this automatically on the next run with no code changes needed.
 
 ### Segmentation — SAM
 
@@ -170,13 +197,13 @@ Used **zero-shot** — no fine-tuning required. RT-DETR bounding boxes serve as 
 
 ### Depth Estimation — EfficientNet-B3 + Monodepth2
 
-- **EfficientNet-B3**: regression head on cropped detection region + sun angle → depth in cm. Trained on Cluj ground truth + Blender synthetic renders. Tuned with Optuna (TPE, 50 trials).
-- **Monodepth2**: self-supervised dense depth map — depth at detection region extracted and averaged with EfficientNet estimate.
-- **Fallback**: proxy from mask geometry when `depth_confidence < 0.4` or `low_light`.
+- **EfficientNet-B3**: regression head on cropped detection region + sun angle → depth in cm. Trained on Cluj ground truth measurements + Blender synthetic renders. Tuned with Optuna (TPE sampler, 50 trials).
+- **Monodepth2**: self-supervised dense depth map — depth at detection region extracted and fused with EfficientNet estimate.
+- **Fallback**: proxy depth from mask geometry when `depth_confidence < 0.4` or `lighting_condition = low_light`.
 
 ### Severity Classification — XGBoost + WOA
 
-**Whale Optimization Algorithm** selects the optimal binary feature subset from the 16-feature ML vector before XGBoost training.
+**Whale Optimization Algorithm** performs binary feature selection across the 16-feature ML vector before XGBoost training.
 
 | Level | Description | Typical depth | Action |
 |---|---|---|---|
@@ -188,7 +215,7 @@ Used **zero-shot** — no fine-tuning required. RT-DETR bounding boxes serve as 
 
 ### Route Optimization — ACO
 
-**Ant Colony Optimization** computes the optimal pre-survey driving route through the Cluj-Napoca OSM road network, minimizing total distance while covering all primary and secondary roads.
+**Ant Colony Optimization** computes the optimal pre-survey driving route through the Cluj-Napoca OSM road network (loaded via `osmnx`), minimizing total distance while covering all primary and secondary roads.
 
 ---
 
@@ -214,61 +241,27 @@ Used **zero-shot** — no fine-tuning required. RT-DETR bounding boxes serve as 
 
 ---
 
-## Database Schema
+## Database
 
-```sql
-CREATE TYPE damage_type_enum AS ENUM (
-    'longitudinal_crack', 'transverse_crack', 'alligator_crack',
-    'pothole', 'patch_deterioration'
-);
-CREATE TYPE severity_enum  AS ENUM ('S1', 'S2', 'S3', 'S4', 'S5');
-CREATE TYPE lighting_enum  AS ENUM ('daylight', 'overcast', 'low_light');
+PostgreSQL 15 + PostGIS runs in Docker. Two tables:
 
-CREATE TABLE detections (
-    id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    geom                  GEOMETRY(POINT, 4326),
+**`detections`** — one row per unique georeferenced damage instance:
+- Spatial geometry (`POINT`, SRID 4326) with GIST index
+- All ML-derived attributes: `damage_type`, `confidence`, SAM geometry features, `depth_estimate`, `depth_confidence`, `severity`, `severity_confidence`
+- Lighting, weather (JSONB), location context from OSM
+- Temporal tracking: `first_detected`, `last_detected`, `detection_count`, `deterioration_rate`
+- Derived: `surrounding_density`, `priority_score`
 
-    -- Group 1: Detection Core (RT-DETR)
-    damage_type           damage_type_enum,
-    confidence            FLOAT,
+**`survey_log`** — one row per pipeline run, tracking input footage, timestamps, detection counts, and processing status.
 
-    -- Group 2: Geometry (SAM)
-    surface_area          FLOAT,
-    edge_sharpness        FLOAT,
-    interior_contrast     FLOAT,
-    mask_compactness      FLOAT,
-
-    -- Group 3: Depth + Severity
-    depth_estimate        FLOAT,
-    depth_confidence      FLOAT,
-    severity              severity_enum,
-    severity_confidence   FLOAT,
-
-    -- Group 4: Lighting
-    lighting_condition    lighting_enum,
-    shadow_geometry_score FLOAT,
-
-    -- Group 5: Location Context
-    street_name           VARCHAR,
-    road_importance       SMALLINT,
-    infra_proximity       FLOAT,
-
-    -- Group 6: Weather
-    weather               JSONB,
-
-    -- Group 7: Temporal Tracking
-    first_detection_date  TIMESTAMP,
-    last_detection_date   TIMESTAMP,
-    detection_count       INT DEFAULT 1,
-    deterioration_rate    FLOAT DEFAULT 0.0,
-
-    -- Group 8: Derived
-    surrounding_density   INT DEFAULT 0,
-    priority_score        FLOAT
-);
-
-CREATE INDEX detections_geom_idx ON detections USING GIST(geom);
+**Priority score formula** (implemented in `Detection.compute_priority_score()`):
 ```
+priority_score = severity_weight × road_weight × infra_weight × log(detection_count + 1)
+```
+
+**DB session access:**
+- `get_db()` — FastAPI `Depends()` injection for route handlers
+- `get_db_session()` — direct async context manager for pipeline scripts
 
 ---
 
@@ -281,18 +274,17 @@ Cluj-Road-Intelligence-System/
 │   ├── detection/
 │   │   ├── train.py                ✅ RT-DETR-L two-phase training + SWA
 │   │   ├── evaluate.py             ✅ Per-class AP, mAP50-95, checkpoint comparison
-│   │   ├── monitor.py              ✅ Live training dashboard
+│   │   ├── monitor.py              ✅ Live training dashboard (reads results.csv)
 │   │   └── data_prep/
+│   │       ├── prep_rdd2022.py     ✅ RDD2022 format conversion
+│   │       ├── prep_pothole600.py  ✅ Pothole600 format conversion
+│   │       ├── merge_datasets.py   ✅ Merge into unified train/val/test split
 │   │       └── coco_to_yolo.py     ✅ COCO JSON → YOLO .txt conversion
-│   ├── depth/
-│   │   └── train.py                ⬜ EfficientNet-B3 depth regression
-│   ├── severity/
-│   │   ├── train_xgboost.py        ⬜ XGBoost severity classifier
-│   │   └── feature_selection_woa.py ⬜ WOA feature selection
 │   ├── optimization/
-│   │   ├── pso_hyperparams.py      ✅ PSO search (7-dim, 15 particles)
-│   │   ├── optuna_search.py        ⬜ Optuna HPO for EfficientNet-B3 + XGBoost
-│   │   └── aco_route.py            ⬜ ACO survey route
+│   │   └── pso_hyperparams.py      ✅ PSO search (7-dim, 15 particles × 10 iters)
+│   ├── segmentation/               ⬜ SAM inference module
+│   ├── depth/                      ⬜ EfficientNet-B3 depth training
+│   ├── severity/                   ⬜ XGBoost + WOA feature selection
 │   └── weights/
 │       ├── rtdetr_l_rdd2022.pt     🔄 Training in progress
 │       ├── rtdetr_l_cluj.pt        ⬜ Future: fine-tuned on Cluj footage
@@ -310,43 +302,44 @@ Cluj-Road-Intelligence-System/
 │   └── orchestrator.py             ⬜ End-to-end coordinator
 │
 ├── backend/
-│   ├── core/
-│   │   ├── config.py               ✅ Settings + DB connection
-│   │   └── database.py             ✅ SQLAlchemy async session
-│   ├── models/
-│   │   └── detection.py            ✅ SQLAlchemy ORM model
-│   ├── schemas/
-│   │   └── detection.py            ✅ Pydantic v2 schemas
-│   ├── api/routes/
-│   │   ├── detections.py           ✅ GET /detections, /{id}, /nearby
-│   │   ├── stats.py                ✅ GET /stats, /heatmap, /priority-list
-│   │   └── processing.py           ✅ POST /process + APScheduler daily job
-│   └── main.py                     ✅ FastAPI app + CORS
+│   ├── main.py                     ✅ FastAPI app + CORS
+│   ├── database.py                 ✅ SQLAlchemy engine, get_db(), get_db_session()
+│   ├── models.py                   ✅ Detection + SurveyLog ORM models
+│   ├── schemas.py                  ✅ Pydantic v2 schemas
+│   └── routes/
+│       ├── detections.py           ✅ GET /detections, /{id}, /nearby
+│       ├── stats.py                ✅ GET /stats
+│       ├── heatmap.py              ✅ GET /heatmap
+│       └── priority.py             ✅ GET /priority-list
 │
-├── frontend/
-│   └── src/
-│       ├── components/
-│       │   ├── Map/                ⬜ Leaflet + severity pins + heatmap
-│       │   ├── Sidebar/            ⬜ Stats + filters + priority list
-│       │   └── DetailPanel/        ⬜ Per-detection 26-feature display
-│       └── App.jsx                 ⬜ Root component
-│
-├── data/
-│   ├── datasets/
-│   │   ├── rdd2022/                ✅ 21,479 images
-│   │   ├── pothole600/             ✅ 5,857 images
-│   │   └── cluj/                   ⬜ Planned: locally collected footage
-│   └── detection/
-│       ├── dataset.yaml            ✅ Ultralytics training config
-│       ├── train_images.txt        ✅ 27,336 paths
-│       ├── val_images.txt          ✅ 5,857 paths
-│       └── test_images.txt         ✅ 5,857 paths
+├── scheduler/
+│   └── daily_job.py                ✅ APScheduler cron — fires pipeline nightly
+│                                      (Europe/Bucharest TZ)
 │
 ├── scripts/
-│   ├── setup_db.py                 ✅ PostgreSQL schema + enums + GIST index
-│   └── run_survey.py               ⬜ CLI entrypoint for full pipeline
+│   ├── download_datasets.py        ✅ Download RDD2022 + Pothole600
+│   ├── inspect_datasets.py         ✅ Distribution analysis and plots
+│   ├── verify_merge.py             ✅ Verify merged dataset integrity
+│   └── run_survey.py               ✅ Manual one-shot pipeline trigger
 │
-├── docker-compose.yml              ✅ PostgreSQL + PostGIS + pgAdmin
+├── frontend/
+│   └── (placeholder)               ⬜ React dashboard planned
+│
+├── data/
+│   ├── raw/
+│   │   ├── footage/                Input dashcam .mp4 files
+│   │   └── gps_logs/               GPX telemetry files
+│   ├── processed/
+│   │   ├── frames/                 Extracted video frames
+│   │   └── metadata/               Per-frame annotation metadata
+│   ├── datasets/                   Prepared training/evaluation datasets
+│   └── detection/
+│       ├── dataset.yaml            ✅ YOLO-format dataset config
+│       ├── train.json              ✅ 27,336 images
+│       ├── val.json                ✅ 5,857 images
+│       └── test.json               ✅ 5,857 images
+│
+├── docker-compose.yml              ✅ PostgreSQL 15 + PostGIS + pgAdmin
 └── requirements.txt                ✅
 ```
 
@@ -366,6 +359,8 @@ Phase 1 (10 frozen epochs) complete. Phase 2 (50 full fine-tune epochs) running.
 | 7 | 0.977 | 0.569 | 0.500 | 0.0235 | 0.00845 |
 | 10 | 0.942 | 0.546 | 0.533 | 0.0266 | 0.00992 |
 
+GIoU and L1 losses decrease consistently. Recall climbs from 0.201 to 0.533 across the frozen phase. Precision reports `nan` during frozen training — expected, resolves in phase 2 as the full network adapts.
+
 ---
 
 ## Planned: Cluj Data Collection & Fine-tuning
@@ -374,13 +369,84 @@ Phase 1 (10 frozen epochs) complete. Phase 2 (50 full fine-tune epochs) running.
 
 **Survey route:** generated by ACO over the Cluj-Napoca OSM road network.
 
-**Annotation:** Label Studio — bounding boxes for all 5 classes + manual depth measurements.
+**Annotation:** Label Studio — bounding boxes for all 5 classes + manual depth measurements for EfficientNet ground truth.
 
 **Fine-tuning pipeline:**
 ```
-rtdetr_l_rdd2022.pt  →  Cluj frames       →  rtdetr_l_cluj.pt
+rtdetr_l_rdd2022.pt  →  Cluj frames        →  rtdetr_l_cluj.pt
 EfficientNet-B3       →  depth measurements →  depth_effnet.pt
 XGBoost               →  Cluj features      →  xgboost_severity.json
+```
+
+---
+
+## Usage
+
+### Dataset Preparation
+
+```bash
+# Download raw datasets
+python scripts/download_datasets.py
+
+# Convert and merge (run in order)
+python ml/detection/data_prep/prep_rdd2022.py
+python ml/detection/data_prep/prep_pothole600.py
+python ml/detection/data_prep/merge_datasets.py
+python ml/detection/data_prep/coco_to_yolo.py
+
+# Verify
+python scripts/inspect_datasets.py
+python scripts/verify_merge.py
+```
+
+### Training
+
+```bash
+# (Optional) PSO hyperparameter search — ~9-12h on RTX 2050
+python ml/optimization/pso_hyperparams.py
+
+# Train RT-DETR-L (auto-loads pso_best.json if present)
+python ml/detection/train.py
+python ml/detection/train.py --smoke_test         # 2-epoch pipeline validation
+python ml/detection/train.py --resume runs/detect/rtdetr_road/weights/last.pt
+
+# Monitor in a second terminal
+python ml/detection/monitor.py                    # auto-refreshes every 30s
+python ml/detection/monitor.py --save             # save PNG
+python ml/detection/monitor.py --interval 60
+```
+
+### Evaluation
+
+```bash
+python ml/detection/evaluate.py
+python ml/detection/evaluate.py --full            # val + test + TTA + comparison
+python ml/detection/evaluate.py --compare         # best.pt vs swa.pt vs last.pt
+```
+
+### Database
+
+```bash
+docker-compose up -d
+python scripts/setup_db.py
+```
+
+### Backend
+
+```bash
+uvicorn backend.main:app --reload
+# Swagger UI: http://localhost:8000/docs
+```
+
+### Pipeline
+
+```bash
+# Manual one-shot survey run
+python scripts/run_survey.py
+python scripts/run_survey.py --date 2024-06-15
+
+# Nightly scheduler (blocks — fires at 02:00 Europe/Bucharest)
+python scheduler/daily_job.py
 ```
 
 ---
@@ -390,38 +456,36 @@ XGBoost               →  Cluj features      →  xgboost_severity.json
 | Method | Endpoint | Description |
 |---|---|---|
 | `GET` | `/detections` | All detections, paginated and filterable |
-| `GET` | `/detections/{id}` | Single detection with all 26 features |
+| `GET` | `/detections/{id}` | Single detection with all features |
 | `GET` | `/detections/nearby` | Detections within radius of coordinates |
 | `GET` | `/stats` | City-wide counts by type and severity |
 | `GET` | `/heatmap` | Density grid for map overlay |
 | `GET` | `/priority-list` | Ranked repair list by priority_score |
 | `POST` | `/process` | Trigger processing of new survey footage |
 
-Daily survey job embedded in FastAPI via APScheduler — fires automatically at 02:00 every night.
-
 ---
 
 ## Roadmap
 
 **Done:**
-- [x] RDD2022 + Pothole600 dataset merge and COCO → YOLO conversion
+- [x] Dataset download, conversion, merge, and verification scripts
 - [x] Data distribution analysis and plots
 - [x] RT-DETR-L training pipeline (two-phase + SWA + PSO integration)
 - [x] PSO hyperparameter optimization script
 - [x] Evaluation script with per-class AP and checkpoint comparison
 - [x] Live training monitor
-- [x] Docker Compose — PostgreSQL + PostGIS + pgAdmin
-- [x] Database schema, enums, GIST index
+- [x] Docker Compose — PostgreSQL 15 + PostGIS + pgAdmin
+- [x] Database schema — `detections` + `survey_log` tables, enums, GIST index
 - [x] SQLAlchemy ORM models + Pydantic v2 schemas
-- [x] FastAPI backend — all endpoints (tested on Swagger)
-- [x] Daily APScheduler job
+- [x] FastAPI backend — all routes (tested on Swagger)
+- [x] APScheduler daily job (`scheduler/daily_job.py`)
 
 **In progress:**
 - [ ] RT-DETR-L Phase 2 training (50 epochs)
 - [ ] PSO search + retraining with best hyperparameters
 
 **Planned:**
-- [ ] Inference pipeline — all 8 modules
+- [ ] Inference pipeline — all 8 modules + orchestrator
 - [ ] React dashboard — map, sidebar, detail panel
 - [ ] ACO survey route generation
 - [ ] Cluj-Napoca data collection drive
@@ -429,47 +493,89 @@ Daily survey job embedded in FastAPI via APScheduler — fires automatically at 
 - [ ] EfficientNet-B3 depth model training
 - [ ] XGBoost + WOA severity classifier
 - [ ] RT-DETR fine-tuning on Cluj footage
-- [ ] End-to-end integration test
+- [ ] End-to-end integration test on real Cluj footage
 - [ ] City Hall pilot demonstration
 
 ---
 
 ## Papers
 
+### Object Detection & Transformers
+
 | Paper | Year |
 |---|---|
 | DETRs Beat YOLOs on Real-Time Object Detection | 2023 |
+| End-to-End Object Detection with Transformers (DETR) | 2020 |
 | RT-DETRv2: Improved Baseline with Bag-of-Freebies | 2024 |
-| RT-DETRv3: Real-Time End-to-End Object Detection | 2024 |
+| RT-DETRv3: Real-Time End-to-End Object Detection with Hierarchical Dense Positive Supervision | 2024 |
+| Feature Pyramid Networks for Object Detection | 2017 |
+| Focal Loss for Dense Object Detection | 2017 |
+
+### Road Damage Detection
+
+| Paper | Year |
+|---|---|
+| Computer Vision for Road Imaging and Pothole Detection: A State-of-the-Art Review | — |
+| Road Damage Detection and Classification Using Deep Neural Networks | — |
+| Real-Time Road Damage Detection System on Deep Learning | — |
+| RDD2022: A Multi-National Image Dataset for Automatic Road Damage Detection | 2024 |
+| An Annotated Street View Image Dataset for Automated Road Damage Detection (SVRDD) | — |
+| Robust Video-Based Pothole Detection and Area Estimation | — |
+| Pothole Detection in Adverse Weather Leveraging Synthetic Images and Attention-Based Method | — |
+| When Segment Anything Model Meets Inventorying of Roadway Assets | — |
+
+### Depth Estimation
+
+| Paper | Year |
+|---|---|
+| Digging into Self-Supervised Monocular Depth Estimation | 2019 |
+| A Comparison of Low-Cost Monocular Vision Techniques for Pothole Distance Estimation | — |
+
+### Segmentation
+
+| Paper | Year |
+|---|---|
 | Segment Anything | 2023 |
 | SAM 2: Segment Anything in Images and Videos | 2024 |
-| When Segment Anything Model Meets Invisible | 2024 |
-| EfficientNet: Rethinking Model Scaling for CNNs | 2019 |
-| Digging into Self-Supervised Monocular Depth Estimation | 2019 |
-| Robust Video-Based Pothole Detection | — |
-| Computer Vision for Road Imaging and Pavement Distress | — |
-| A Comparison of Low-Cost Monocular Vision Systems | — |
-| XGBoost: A Scalable Tree Boosting System | 2016 |
-| Particle Swarm Optimization | 1995 |
-| Particle Swarm Optimization for Hyperparameter Selection | 2015 |
-| Particle Swarm Optimization-Based Automated Detection | — |
-| Modified XGBoost Hyper-Parameter Tuning | — |
-| A Review of Whale Optimization Algorithm | — |
-| Ant Colony Optimisation for Vehicle Routing | 1996 |
-| Optuna: A Next-generation Hyperparameter Optimization Framework | 2019 |
-| Focal Loss for Dense Object Detection | 2017 |
-| Feature Pyramid Networks for Object Detection | 2017 |
-| Averaging Weights Leads to Wider Optima and Better Generalization | 2018 |
-| Albumentations: Fast and Flexible Image Augmentations | 2020 |
-| A Density-Based Algorithm for Discovering Clusters (DBSCAN) | 1996 |
-| RDD2022: A Multi-National Image Dataset for Road Damage Detection | 2024 |
-| Road Damage Detection and Classification | — |
-| Real-Time Road Damage Detection System | — |
-| Pothole Detection in Adverse Weather | — |
-| An Annotated Street View Image Dataset | — |
-| End-to-End Object Detection with Transformers (DETR) | 2020 |
 
-> Full citations with authors, venues, and DOIs are listed in the thesis bibliography.
+### ML / Boosting / Severity Scoring
+
+| Paper | Year |
+|---|---|
+| XGBoost: A Scalable Tree Boosting System | 2016 |
+| Modified XGBoost Hyper-Parameter Tuning Using Adaptive Particle Swarm Optimization | — |
+| EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks | 2019 |
+
+### Hyperparameter Optimization
+
+| Paper | Year |
+|---|---|
+| Particle Swarm Optimization | 1995 |
+| Particle Swarm Optimization for Hyper-Parameter Selection in Deep Neural Networks | 2015 |
+| Particle Swarm Optimization-Based Automatic Parameter Tuning | — |
+| A Review of Whale Optimization Algorithm for Feature Selection | — |
+| Optuna: A Next-generation Hyperparameter Optimization Framework | 2019 |
+
+### Training Techniques
+
+| Paper | Year |
+|---|---|
+| Averaging Weights Leads to Wider Optima and Better Generalization (SWA) | 2018 |
+| Albumentations: Fast and Flexible Image Augmentations | 2020 |
+
+### Clustering / Spatial
+
+| Paper | Year |
+|---|---|
+| A Density-Based Algorithm for Discovering Clusters in Large Spatial Databases with Noise (DBSCAN) | 1996 |
+
+### Routing / Optimization
+
+| Paper | Year |
+|---|---|
+| Ant Colony Optimisation for Vehicle Routing Problem | 1996 |
+
+> **Total: 31 papers.** Full citations with authors, venues, and DOIs are listed in the thesis bibliography.
 
 ---
 
@@ -487,51 +593,19 @@ Daily survey job embedded in FastAPI via APScheduler — fires automatically at 
 | Spatial clustering | DBSCAN (scikit-learn) |
 | Augmentation | Albumentations · Mixup · Mosaic |
 | Training | Focal Loss · SWA · TTA · fp16 AMP · gradient accumulation |
-| Database | PostgreSQL 16 + PostGIS 3.4 |
+| Database | PostgreSQL 15 + PostGIS |
 | ORM | SQLAlchemy 2.0 (async) |
 | Backend | FastAPI + Pydantic v2 |
-| Scheduler | APScheduler |
-| Frontend | React 18 + Leaflet.js + OpenStreetMap |
+| Scheduler | APScheduler (Europe/Bucharest TZ) |
+| Frontend | Planned: React 18 + Leaflet.js |
 | Containerization | Docker Compose |
 | Geocoding | Nominatim (OpenStreetMap) |
 | Road network | OSM Overpass API |
 | Weather | Open-Meteo API |
 | Sun angle | pysolar |
 | Annotation | Label Studio |
+| Code style | Black |
 | Language | Python 3.12 |
-
----
-
-## Setup
-
-```bash
-git clone https://github.com/para0107/Cluj-Road-Intelligence-System.git
-cd Cluj-Road-Intelligence-System
-
-python -m venv .venv
-.venv\Scripts\activate
-
-pip install -r requirements.txt
-
-# Convert dataset labels (once)
-python ml/detection/data_prep/coco_to_yolo.py
-
-# Train
-python ml/detection/train.py
-
-# Monitor (second terminal)
-python ml/detection/monitor.py --live
-
-# Database
-docker-compose up -d
-python scripts/setup_db.py
-
-# Backend
-uvicorn backend.main:app --reload
-
-# Frontend
-cd frontend && npm install && npm run dev
-```
 
 ---
 

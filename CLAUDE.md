@@ -39,10 +39,12 @@ python scripts/setup_db.py
 
 # Run backend API
 uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+# Or: python backend/main.py
 # API docs at http://localhost:8000/docs
 
-# Run tests
+# Run tests (tests/ is not yet populated)
 pytest tests/
+pytest tests/test_foo.py::test_bar   # run a single test
 
 # Format code
 black .
@@ -51,8 +53,15 @@ black .
 ### ML Pipeline
 
 ```bash
-# 1. Prepare dataset (convert COCO → YOLO format)
-python ml/detection/data_prep/coco_to_yolo.py
+# 0. Download raw datasets (RDD2022 + Pothole600)
+python scripts/download_datasets.py
+
+# 1. Prepare dataset — run in order:
+python ml/detection/data_prep/prep_rdd2022.py      # convert RDD2022
+python ml/detection/data_prep/prep_pothole600.py   # convert Pothole600
+python ml/detection/data_prep/merge_datasets.py    # merge into one split
+python ml/detection/data_prep/coco_to_yolo.py      # COCO → YOLO format
+# Verify: python scripts/inspect_datasets.py / scripts/verify_merge.py
 
 # 2. (Optional) Run PSO to find optimal hyperparameters — takes ~9-12h on RTX 2050
 python ml/optimization/pso_hyperparams.py
@@ -66,6 +75,11 @@ python ml/detection/train.py --resume runs/detect/rtdetr_road/weights/last.pt
 python ml/detection/evaluate.py
 python ml/detection/evaluate.py --full           # val + test + TTA + comparison
 python ml/detection/evaluate.py --compare        # compare best.pt vs swa.pt vs last.pt
+
+# 5. Monitor training live (run in a separate terminal while train.py runs)
+python ml/detection/monitor.py                   # auto-refreshes every 30s
+python ml/detection/monitor.py --save            # one-shot, saves PNG
+python ml/detection/monitor.py --interval 60     # custom refresh interval
 
 # Manually trigger the full detection pipeline
 python scripts/run_survey.py
@@ -90,8 +104,8 @@ The system has four distinct layers:
 - Training outputs go to `runs/detect/rtdetr_road/`; key checkpoints are `best.pt`, `swa.pt`, `last.pt`
 
 ### 2. Inference Pipeline (`pipeline/`, `scripts/`)
-- `pipeline/orchestrator.py` — orchestrates the full daily pipeline: frame extraction → detection → segmentation → depth → severity → GPS clustering → DB write
-- `scripts/run_survey.py` — manual one-shot trigger for the pipeline
+- `pipeline/orchestrator.py` — **not yet implemented**; planned to orchestrate: frame extraction → detection → segmentation → depth → severity → GPS clustering → DB write
+- `scripts/run_survey.py` — manual one-shot trigger; calls `pipeline/orchestrator.py` when it exists
 - `scheduler/daily_job.py` — APScheduler cron job that fires the orchestrator nightly (Europe/Bucharest timezone)
 
 ### 3. Backend API (`backend/`)
