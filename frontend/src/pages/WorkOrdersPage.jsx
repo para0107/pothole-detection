@@ -848,7 +848,7 @@ const styles = {
     position: 'fixed',
     inset: 0,
     zIndex: 1200,
-    background: 'rgba(0, 0, 0, 0.55)',
+    background: 'rgba(6, 5, 4, 0.72)',
     backdropFilter: 'blur(3px)',
     display: 'flex',
     alignItems: 'center',
@@ -899,7 +899,7 @@ const styles = {
     position: 'fixed',
     inset: 0,
     zIndex: 1090,
-    background: 'rgba(0, 0, 0, 0.45)',
+    background: 'rgba(6, 5, 4, 0.62)',
   },
   drawer: {
     position: 'fixed',

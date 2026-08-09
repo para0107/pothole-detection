@@ -546,7 +546,7 @@ const styles = {
   },
   overlay: {
     position: 'fixed', inset: 0, zIndex: 2000,
-    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(3px)',
+    background: 'rgba(6,5,4,0.72)', backdropFilter: 'blur(3px)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     padding: 20,
   },

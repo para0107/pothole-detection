@@ -3,17 +3,26 @@ import {
   Flag, Search, ShieldCheck, BadgeCheck, Flame, Wrench, Building2, Moon,
 } from 'lucide-react'
 
+/**
+ * Damage-class colours, tuned for the Ember dark ground.
+ *
+ * These are lifted off the old paper values: a hue that reads as "earth
+ * orange" on warm paper turns to mud on near-black, and the chips in ui.jsx
+ * render them at 16–28% alpha over a dark card, which costs more luminance
+ * again. Every value here clears 4.5:1 on --bg. Keep them in step with the
+ * status ramp in index.css.
+ */
 export const CLASS_COLORS = {
-  longitudinal_crack:        '#6b93b8',   // steel
-  transverse_crack:          '#b07a9a',   // mauve
-  alligator_crack:           '#d98a3f',   // earth orange
-  repaired_crack:            '#7ba05b',   // olive
-  pothole:                   '#c0492a',   // brick red
-  pedestrian_crossing_blur:  '#9d7bb0',   // violet
-  lane_line_blur:            '#caa23f',   // ochre
-  manhole_cover:             '#4f9a92',   // teal
-  patchy_road:               '#a878a0',   // plum
-  rutting:                   '#8a8578',   // warm slate
+  longitudinal_crack:        '#7fb0d6',   // steel
+  transverse_crack:          '#cf94b4',   // mauve
+  alligator_crack:           '#e8a04f',   // earth orange
+  repaired_crack:            '#93a862',   // olive
+  pothole:                   '#e5674a',   // brick red
+  pedestrian_crossing_blur:  '#b18ec7',   // violet
+  lane_line_blur:            '#d9ab45',   // ochre
+  manhole_cover:             '#55b3a8',   // teal
+  patchy_road:               '#c294bb',   // plum
+  rutting:                   '#a9a294',   // warm slate
 }
 
 export const CLASS_LABELS = {
@@ -45,31 +54,37 @@ export const CLASS_ICONS = {
 export const ALL_CLASSES = Object.keys(CLASS_LABELS)
 
 // ── Severity ──────────────────────────────────────────────────────────────
-export const SEVERITY_COLORS = {
-  1: '#7ba05b',   // S1 · olive · monitor
-  2: '#d0a83f',   // S2 · amber · schedule
-  3: '#d67f34',   // S3 · orange · priority
-  4: '#cf4f2c',   // S4 · brick-red · urgent
-  5: '#b0221a',   // S5 · deep red · emergency
+/**
+ * Severity S1→S5 — one row per band, and every other severity map in the app
+ * is derived from it. Previously these were four parallel object literals that
+ * had to be edited in step; the landing page then added a fifth copy. One
+ * table means a band can never disagree with itself.
+ *
+ * Brightness rises with urgency, so on the dark ground the brightest thing on
+ * the screen is always the worst thing on the road. This is the opposite of
+ * the paper edition, where S5 was the darkest value. The colours mirror
+ * --s1..--s5 in index.css; change both together.
+ */
+export const SEVERITY = {
+  1: { name: 'Monitor',   color: '#93a862', action: 'Log it and re-inspect at the next survey.' },
+  2: { name: 'Schedule',  color: '#d9ab45', action: 'Add it to the routine maintenance plan.' },
+  3: { name: 'Priority',  color: '#e08a3c', action: 'Fit it into the current repair cycle.' },
+  4: { name: 'Urgent',    color: '#e5674a', action: 'Send a crew within the week.' },
+  5: { name: 'Emergency', color: '#f2553c', action: 'Close the lane and repair now.' },
 }
 
-export const SEVERITY_LABELS = {
-  1: 'S1 · Monitor',
-  2: 'S2 · Schedule',
-  3: 'S3 · Priority',
-  4: 'S4 · Urgent',
-  5: 'S5 · Emergency',
-}
+/** The bands in order — for legends, scales and pickers. */
+export const SEVERITY_BANDS = Object.entries(SEVERITY)
+  .map(([s, v]) => ({ s: Number(s), ...v }))
 
-export const SEVERITY_ACTIONS = {
-  1: 'Monitor: log it and re-inspect at the next survey.',
-  2: 'Schedule: add it to the routine maintenance plan.',
-  3: 'Priority repair: schedule it within the current cycle.',
-  4: 'Urgent repair: dispatch a crew this week.',
-  5: 'Emergency: close the lane and repair immediately.',
-}
+const bySeverity = (pick) =>
+  Object.fromEntries(Object.entries(SEVERITY).map(([s, v]) => [s, pick(v, s)]))
 
-export const SEVERITY_SHORT = { 1: 'S1', 2: 'S2', 3: 'S3', 4: 'S4', 5: 'S5' }
+export const SEVERITY_COLORS  = bySeverity(v => v.color)
+export const SEVERITY_NAMES   = bySeverity(v => v.name)
+export const SEVERITY_LABELS  = bySeverity((v, s) => `S${s} · ${v.name}`)
+export const SEVERITY_ACTIONS = bySeverity(v => `${v.name}: ${v.action.charAt(0).toLowerCase()}${v.action.slice(1)}`)
+export const SEVERITY_SHORT   = bySeverity((v, s) => `S${s}`)
 
 // ── Map defaults ──────────────────────────────────────────────────────────
 // Maps open on the signed-in user's city (see hooks/useCityCenter.js).
@@ -80,17 +95,10 @@ export const DEFAULT_CENTER = [45.9432, 24.9668]   // country centroid fallback
 export const DEFAULT_ZOOM   = 7
 export const CITY_ZOOM      = 13                   // zoom used once a city resolves
 
-// Landmarks used as an offline fallback for the demo city's fly-to menu
-export const CLUJ_LANDMARKS = [
-  { name: 'Piața Unirii',        lat: 46.7694, lon: 23.5899 },
-  { name: 'Gara CFR',            lat: 46.7847, lon: 23.5867 },
-  { name: 'Cluj Arena',          lat: 46.7686, lon: 23.5725 },
-  { name: 'FSEGA',               lat: 46.7734, lon: 23.6193 },
-  { name: 'Iulius Mall',         lat: 46.7735, lon: 23.6320 },
-  { name: 'Aeroport Intl. Cluj', lat: 46.7852, lon: 23.6862 },
-  { name: 'Mănăștur',            lat: 46.7568, lon: 23.5567 },
-  { name: 'Mărăști',             lat: 46.7830, lon: 23.6180 },
-]
+// No landmark list lives here. The map's fly-to menu is served per city by
+// GET /cities/landmarks (free OSM lookup, cached forever in city_landmarks),
+// so a deployment for any city works with no code edits. A hardcoded list for
+// one demo city used to sit here and made every other city look broken.
 
 // ── Basemaps (all key-free) ───────────────────────────────────────────────
 export const BASEMAPS = {

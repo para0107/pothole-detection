@@ -14,7 +14,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Map, Table, BarChart2, Upload, ListOrdered,
-  Info, Sun, Moon, Activity, Radio, LogOut, Shield, MapPin, ChevronDown,
+  Info, Activity, Radio, LogOut, Shield, MapPin, ChevronDown,
   Trash2, Menu, X, Award, Inbox, Wrench, Gauge, Sparkles, Compass, HelpCircle,
   MoreHorizontal,
 } from 'lucide-react'

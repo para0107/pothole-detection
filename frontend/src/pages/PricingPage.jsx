@@ -260,7 +260,9 @@ function TierCard({ tier, delay, onTalk }) {
   const body = (
     <SpotlightCard
       className={`pricing-card ${featured ? 'pricing-card-featured' : ''}`}
-      spotlightColor={featured ? 'rgba(234, 255, 61, 0.16)' : 'rgba(255, 255, 255, 0.10)'}
+      /* Oxide on the featured tier, plain light elsewhere. The old lime was a
+         leftover from a palette the app no longer ships. */
+      spotlightColor={featured ? 'rgba(232, 130, 95, 0.18)' : 'rgba(255, 255, 255, 0.07)'}
     >
       {featured && (
         <span style={styles.popularPill}>Most popular</span>

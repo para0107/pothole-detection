@@ -1,39 +1,164 @@
 /* ════════════════════════════════════════════════════════════════════════
    RDDS — Road Degradation Detection System · Design System
-   Engineering Monograph: a Swiss/DIN technical publication. Concrete & ink,
-   one oxide-brick accent, hairlines, Chivo + Spline Sans Mono. The dark
-   "night edition" is the default; :root.light is the concrete paper edition.
-   Emphasis is weight, scale and rule — never gradient, glow or glass.
+   "Ember" — a situation room. Warm near-black ground, one oxide-brick brand,
+   and a severity ramp that gets brighter as it gets more urgent, so on this
+   ground brightness always means danger.
+
+   ── The token contract ────────────────────────────────────────────────────
+   Three layers. Components read ONLY layer 2.
+
+     1  PRIMITIVES   raw ramps (--ink-*, --oxide-*). Never referenced outside
+                     this file. Changing a theme means remapping layer 2 onto
+                     different primitives, nothing else.
+     2  ROLES        what every component uses: --bg-*, --text-*, --border-*,
+                     --accent*, the status ramp, --s1..--s5.
+     3  COMPONENTS   .card, .btn, .chip, .input … built from layer 2 only.
+
+   ── Two rules worth knowing before you edit ───────────────────────────────
+   · --accent is the READABLE brand colour (light oxide). It is used ~90× as
+     text, icon and border. Anything that puts text ON the brand uses the
+     --accent-solid / --accent-ink pair instead, which is the deep brick.
+     Swapping these is the classic way to make the whole app fail contrast.
+   · :root.light is a real, maintained paper edition, not dead code. Maps key
+     off it through hooks/useTheme.js (useIsDark) to choose their basemap, and
+     MapPage's basemap switcher can still override per session.
    ════════════════════════════════════════════════════════════════════════ */
 
-/* ─── Design tokens · dark "night edition" (monograph on dark stock) ─────── */
+/* ─── Layer 1 · primitives ──────────────────────────────────────────────── */
+:root {
+  /* Warm near-black. Every step is the same hue, so surfaces stack without
+     going grey or blue the way a neutral ramp does over a brick accent. */
+  --ink-950: #0b0a08;
+  --ink-900: #0e0d0b;
+  --ink-850: #141311;
+  --ink-800: #191713;
+  --ink-750: #201d18;
+  --ink-700: #2a2620;
+  --ink-600: #3a352d;
+  --ink-500: #565046;
+  --ink-400: #7a7469;
+  --ink-300: #a9a294;
+  --ink-200: #d8d1c4;
+  --ink-100: #f3eee4;
+
+  /* Oxide brick — the one brand hue, dark to light. */
+  --oxide-700: #7f2a13;
+  --oxide-600: #a8391f;
+  --oxide-500: #c0472a;
+  --oxide-400: #d9603c;
+  --oxide-300: #e8825f;
+  --oxide-200: #f0a184;
+
+  /* Paper, for the light edition only. */
+  --paper-100: #fbfaf6;
+  --paper-200: #f5f2ec;
+  --paper-300: #efece4;
+  --paper-400: #ddd8cc;
+  --paper-500: #cbc5b6;
+}
+
+/* ─── Layer 2 · roles · Ember (default) ─────────────────────────────────── */
 :root {
   /* Surfaces */
-  --bg:            #f5f2ec;
-  --bg-elev:       #efece4;
-  --bg-card:       #fbfaf6;
-  --bg-card2:      #efece4;
+  --bg:            var(--ink-900);
+  --bg-elev:       var(--ink-850);
+  --bg-card:       var(--ink-800);
+  --bg-card2:      var(--ink-750);
+  --bg-glass:      rgba(14, 13, 11, 0.78);
+  --bg-glass-soft: rgba(14, 13, 11, 0.55);
+  --border:        var(--ink-700);
+  --border-bright: var(--ink-600);
+  --border-accent: rgba(232, 130, 95, 0.42);
+
+  /* Content */
+  --text:          var(--ink-100);
+  --text-dim:      var(--ink-300);
+  --text-muted:    var(--ink-400);
+
+  /* Brand. --accent reads (text/icon/border); --accent-solid carries text. */
+  --accent:          var(--oxide-300);
+  --accent-strong:   var(--oxide-200);
+  --accent-solid:    var(--oxide-500);
+  --accent-solid-hi: #d0532f;
+  --accent-ink:      #ffffff;             /* text on --accent-solid */
+  --accent-contrast: var(--ink-950);      /* text on --accent */
+  --accent-dim:      rgba(232, 130, 95, 0.13);
+  --accent-glow:     rgba(232, 130, 95, 0.30);
+  --cyan:            #6fa8cf;             /* steel — roles / telemetry */
+  --cyan-dim:        rgba(111, 168, 207, 0.14);
+
+  /* Status ramp — lifted off the paper values so it holds on near-black */
+  --red:    #e5674a;
+  --orange: #e08a3c;
+  --yellow: #d9ab45;
+  --green:  #93a862;
+  --blue:   #6fa8cf;
+  --purple: #b18ec7;
+  --teal:   #55b3a8;
+  --pink:   #d18ba6;
+
+  /* Severity S1→S5. Brightness rises with urgency — on this ground the
+     brightest thing on screen is always the worst thing on the road.
+     Kept in step with SEVERITY_COLORS in utils/constants.js. */
+  --s1: #93a862;
+  --s2: #d9ab45;
+  --s3: #e08a3c;
+  --s4: #e5674a;
+  --s5: #f2553c;
+
+  /* Type — Bricolage Grotesque (display) + Hanken Grotesk (text).
+     Spline Sans Mono for every figure, id and timestamp. */
+  --font-display: 'Bricolage Grotesque', 'Chivo', system-ui, sans-serif;
+  --font-sans:    'Hanken Grotesk', system-ui, sans-serif;
+  --font-mono:    'Spline Sans Mono', ui-monospace, monospace;
+
+  /* Geometry */
+  --radius:     8px;
+  --radius-lg:  12px;
+  --radius-xl:  14px;
+  --nav-h:      54px;
+
+  /* Effects. On a dark ground a shadow is a void, not a smudge: it needs to
+     be deeper and paired with a 1px top highlight to read as elevation. */
+  --shadow:    0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 24px 50px -18px rgba(0, 0, 0, 0.75);
+  --edge-hi:   inset 0 1px 0 rgba(255, 255, 255, 0.055);
+  --glow:      none;
+  --transition: all 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+
+  --grad-accent: var(--accent-solid);
+  --grad-hot:    linear-gradient(100deg, var(--s2), var(--s4));
+  --aurora-a:    transparent;
+  --aurora-b:    transparent;
+}
+
+/* ─── Layer 2 · roles · paper edition (escape hatch, still maintained) ──── */
+:root.light {
+  --bg:            var(--paper-200);
+  --bg-elev:       var(--paper-300);
+  --bg-card:       var(--paper-100);
+  --bg-card2:      var(--paper-300);
   --bg-glass:      rgba(245, 242, 236, 0.86);
   --bg-glass-soft: rgba(245, 242, 236, 0.70);
-  --border:        #ddd8cc;
-  --border-bright: #cbc5b6;
+  --border:        var(--paper-400);
+  --border-bright: var(--paper-500);
   --border-accent: rgba(168, 57, 31, 0.45);
 
-  /* Text — ink on paper */
   --text:          #191815;
   --text-dim:      #57544c;
   --text-muted:    #84806f;
 
-  /* Brand — oxide brick */
-  --accent:        #a8391f;
-  --accent-strong: #822b14;
-  --accent-ink:    #ffffff;               /* text on accent */
-  --accent-dim:    rgba(168, 57, 31, 0.10);
-  --accent-glow:   transparent;
-  --cyan:          #3f7d97;                /* muted steel — roles / telemetry */
-  --cyan-dim:      rgba(63, 125, 151, 0.12);
+  --accent:          var(--oxide-600);
+  --accent-strong:   var(--oxide-700);
+  --accent-solid:    var(--oxide-600);
+  --accent-solid-hi: var(--oxide-700);
+  --accent-ink:      #ffffff;
+  --accent-contrast: #ffffff;
+  --accent-dim:      rgba(168, 57, 31, 0.10);
+  --accent-glow:     transparent;
+  --cyan:            #3f7d97;
+  --cyan-dim:        rgba(63, 125, 151, 0.12);
 
-  /* Status ramp — earthed to sit in the world */
   --red:    #d0533a;
   --orange: #d98a3f;
   --yellow: #d9b23f;
@@ -43,62 +168,15 @@
   --teal:   #4f9a92;
   --pink:   #c47a95;
 
-  /* Severity S1→S5 — kept in step with constants.js until the severity pass */
   --s1: #7ba05b;
   --s2: #d0a83f;
   --s3: #d67f34;
   --s4: #cf4f2c;
   --s5: #b0221a;
 
-  /* Type — Bricolage Grotesque (display) + Hanken Grotesk (text), from
-     design variant A. Spline Sans Mono stays for figures & data. */
-  --font-display: 'Bricolage Grotesque', 'Chivo', system-ui, sans-serif;
-  --font-sans:    'Hanken Grotesk', system-ui, sans-serif;
-  --font-mono:    'Spline Sans Mono', ui-monospace, monospace;
-
-  /* Geometry — soft rounded corners, per design variant A */
-  --radius:     8px;
-  --radius-lg:  12px;
-  --radius-xl:  14px;
-  --nav-h:      54px;
-
-  /* Effects — hairline over glow */
   --shadow:    0 1px 2px rgba(26, 24, 21, 0.07);
   --shadow-lg: 0 18px 40px rgba(26, 24, 21, 0.12);
-  --glow:      none;
-  --transition: all 0.16s cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* Flat "gradients" — the monograph does not shimmer */
-  --grad-accent: var(--accent);
-  --grad-hot:    linear-gradient(100deg, var(--s2), var(--s4));
-  --aurora-a:    transparent;
-  --aurora-b:    transparent;
-}
-
-/* ─── Design tokens · light "concrete paper edition" ────────────────────── */
-:root.light {
-  --bg:            #f5f2ec;
-  --bg-elev:       #efece4;
-  --bg-card:       #fbfaf6;
-  --bg-card2:      #efece4;
-  --bg-glass:      rgba(245, 242, 236, 0.86);
-  --bg-glass-soft: rgba(245, 242, 236, 0.70);
-  --border:        #ddd8cc;
-  --border-bright: #cbc5b6;
-  --border-accent: rgba(168, 57, 31, 0.45);
-  --text:          #191815;
-  --text-dim:      #57544c;
-  --text-muted:    #84806f;
-  --accent:        #a8391f;
-  --accent-strong: #822b14;
-  --accent-ink:    #ffffff;
-  --accent-dim:    rgba(168, 57, 31, 0.10);
-  --accent-glow:   transparent;
-  --cyan:          #3f7d97;
-  --cyan-dim:      rgba(63, 125, 151, 0.12);
-  --shadow:        0 1px 2px rgba(26, 24, 21, 0.07);
-  --shadow-lg:     0 18px 40px rgba(26, 24, 21, 0.12);
-  --grad-accent:   var(--accent);
+  --edge-hi:   none;
 }
 
 /* ─── Landing: navbar rides transparently over the opening photograph ───── */
@@ -120,7 +198,7 @@ html, body, #root {
   text-rendering: optimizeLegibility;
 }
 
-::selection { background: var(--accent); color: var(--accent-ink); }
+::selection { background: var(--accent); color: var(--accent-contrast); }
 
 /* Page background: a plain paper/stock surface. Structure comes from
    hairline rules, tables and whitespace — not a decorative field. */
@@ -215,29 +293,44 @@ html, body, #root {
 }
 
 /* ─── Cards / panels ────────────────────────────────────────────────────── */
+/* A card on a dark ground needs the 1px top highlight to read as raised;
+   without it the surface looks like a hole cut in the page. */
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: none;
+  box-shadow: var(--edge-hi);
   transition: var(--transition);
 }
 .card-hover:hover {
   border-color: var(--border-bright);
-  box-shadow: var(--shadow);
+  box-shadow: var(--edge-hi), var(--shadow);
 }
 .card-accent-hover:hover {
   border-color: var(--border-accent);
-  box-shadow: var(--shadow);
+  box-shadow: var(--edge-hi), var(--shadow);
 }
-/* No glass in a printed document — a solid, hairline-ruled panel */
+/* Translucent floating panel. Deliberately NO backdrop-filter: .glass is used
+   ~30× and LivePage alone stacks eight of them over a moving map, where every
+   blurred layer is a full-viewport compositor readback each frame. That is the
+   phone-in-a-moving-car screen, so it is the last place to spend GPU on an
+   effect nobody asked for. A 78%-opaque panel is already legible over a map.
+   Blur is opt-in, on the two pieces of chrome content actually scrolls under:
+   the navbar (its own style object) and the landing board. */
 .glass {
   background: var(--bg-glass);
   border: 1px solid var(--border-bright);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: var(--edge-hi), var(--shadow);
 }
-:root.light .glass { box-shadow: var(--shadow); }
+.glass-blur {
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass { background: var(--bg-card); }
+  .glass-blur { backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
 
 /* Hairline under the fixed navbar — a plain rule, no shimmer */
 .navbar-hairline {
@@ -275,23 +368,25 @@ html, body, #root {
 .btn:active { transform: translateY(1px); }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 
+/* The one place text sits ON the brand, so it takes the solid pair rather
+   than --accent (which is the light, readable oxide). */
 .btn-accent {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--accent-solid);
+  border-color: var(--accent-solid);
   color: var(--accent-ink);
   font-weight: 700;
   position: relative;
   overflow: hidden;
 }
 .btn-accent:hover {
-  background: var(--accent-strong);
-  border-color: var(--accent-strong);
-  box-shadow: none;
+  background: var(--accent-solid-hi);
+  border-color: var(--accent-solid-hi);
+  box-shadow: 0 8px 22px -12px var(--accent-glow);
 }
-.btn-accent::after { display: none; }   /* no shine sweep in the monograph */
+.btn-accent::after { display: none; }
 .btn-ghost { background: transparent; }
-.btn-danger { color: var(--red); border-color: rgba(208, 83, 58, 0.45); }
-.btn-danger:hover { background: rgba(208, 83, 58, 0.10); border-color: var(--red); }
+.btn-danger { color: var(--red); border-color: color-mix(in srgb, var(--red) 45%, transparent); }
+.btn-danger:hover { background: color-mix(in srgb, var(--red) 12%, transparent); border-color: var(--red); }
 .btn-sm { padding: 6px 11px; font-size: 11.5px; border-radius: var(--radius); }
 .btn-active {
   background: var(--accent-dim);
@@ -398,6 +493,16 @@ html, body, #root {
 }
 :root.light .leaflet-control-attribution { background: rgba(233, 231, 224, 0.85) !important; }
 .leaflet-control-attribution a { color: var(--accent) !important; }
+
+/* Carto's dark basemap is neutral grey and reads cold next to the warm
+   near-black ground. A cheap filter on the tile pane pulls it into the Ember
+   palette so the map belongs to the page instead of sitting in a hole.
+   Tiles only — markers and overlays live in their own panes and are
+   untouched. Satellite imagery opts out; tinting a photo looks wrong. */
+:root:not(.light) .leaflet-tile-pane {
+  filter: saturate(0.72) sepia(0.16) hue-rotate(-8deg) brightness(1.06) contrast(1.04);
+}
+:root:not(.light) .leaflet-tile-pane.tile-pane-photo { filter: none; }
 
 /* Pulsing critical marker — glows instead of blinking, draws the eye
    without flicker. */

@@ -21,7 +21,7 @@ import {
 import {
   CLASS_COLORS, CLASS_LABELS, CLASS_ICONS,
   SEVERITY_COLORS, SEVERITY_LABELS, SEVERITY_ACTIONS,
-  CITY_ZOOM, CLUJ_LANDMARKS, BASEMAPS,
+  CITY_ZOOM, BASEMAPS,
 } from '../utils/constants'
 import { fmtCoord, fmtDate, fmtPct } from '../utils/format'
 import {
@@ -264,14 +264,13 @@ export default function MapPage() {
     if (cityCenter && !loading) cityFlown.current = true
   }, [cityCenter, loading])
 
-  // Landmarks: per-city from the backend (free OSM lookup, cached). The
-  // built-in list is an offline fallback for the demo city only.
+  // Landmarks: per-city from the backend (free OSM lookup, cached forever in
+  // city_landmarks). There is deliberately no built-in list — a hardcoded set
+  // of landmarks for one demo city is the kind of thing that silently makes a
+  // deployment for any other city look broken. Until the lookup returns, the
+  // fly-to menu is simply empty.
   const { user } = useAuth()
-  const [landmarks, setLandmarks] = useState(() => (
-    (user?.city || '').toLowerCase().startsWith('cluj')
-      ? CLUJ_LANDMARKS.map(lm => ({ name: lm.name, latitude: lm.lat, longitude: lm.lon }))
-      : []
-  ))
+  const [landmarks, setLandmarks] = useState([])
   useEffect(() => {
     if (!user?.city) return undefined
     let alive = true

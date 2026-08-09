@@ -8,12 +8,26 @@
       content="RDDS — Road Intelligence. Automated urban road-damage detection, classification and repair prioritization from dashcam footage."
     />
     <title>RDDS · Road Intelligence</title>
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0e0d0b" />
     <script>
-      /* Single "living city" theme: always light. Migrate any stale dark
-         preference so existing sessions come back bright, and apply the class
-         before first paint so maps and charts pick light tiles immediately. */
-      try { localStorage.setItem('rids_theme', 'light'); } catch (e) {}
-      document.documentElement.classList.add('light');
+      /* "Ember" ships dark. The paper edition still exists as :root.light and
+         maps key off it (hooks/useTheme.js), so the class is applied here,
+         before first paint, rather than after mount — otherwise every page
+         flashes the wrong ground and Leaflet fetches the wrong basemap first.
+
+         The migration flag matters: the light-only era force-wrote
+         rids_theme='light' on EVERY load, so a stored 'light' is not a choice
+         anybody made. Reading it as one would leave every existing session on
+         the retired paper theme forever. Reset once, then respect the value. */
+      try {
+        var KEY = 'rids_theme', MIGRATED = 'rids_theme_ember';
+        if (!localStorage.getItem(MIGRATED)) {
+          localStorage.setItem(KEY, 'dark');
+          localStorage.setItem(MIGRATED, '1');
+        }
+        if (localStorage.getItem(KEY) === 'light') document.documentElement.classList.add('light');
+      } catch (e) { /* private mode: fall through to the dark default */ }
     </script>
     <link
       rel="icon"

@@ -156,7 +156,10 @@ const styles = {
     position: 'fixed',
     inset: 0,
     zIndex: 2000,
-    background: 'rgba(0, 0, 0, 0.55)',
+    // Deeper than a light-theme scrim would need: 55% black over a near-black
+    // page barely separates the modal from what is behind it.
+    background: 'rgba(6, 5, 4, 0.72)',
+    backdropFilter: 'blur(3px)',
     backdropFilter: 'blur(2px)',
     WebkitBackdropFilter: 'blur(2px)',
     display: 'flex',
