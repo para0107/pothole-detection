@@ -108,6 +108,46 @@ def _git(*args: str) -> Optional[str]:
         return None
 
 
+# Paths whose contents are OUTPUT, not the code under test. A change here says
+# nothing about whether the recorded SHA describes what ran.
+_NON_CODE_PREFIXES: tuple[str, ...] = ("runs/", "data/", "paper/", "logs/")
+
+
+def _dirty_code_paths() -> list[str]:
+    """
+    Paths with uncommitted changes that could actually affect the result.
+
+    WHY THIS IS NOT JUST `git status --porcelain`.
+    The point of the dirty flag is "the metric did not come from the recorded SHA".
+    That is a claim about CODE. But the harness writes its own artefacts into
+    `runs/research/`, and once those are tracked the queue rewrites
+    `_weekend_log.json` before every single run - so the tree is dirty by the time
+    run 1 starts and every run in the queue is marked unreportable by its own output.
+
+    That is exactly what happened on the first weekend-2 queue, and it would have
+    silently invalidated all eleven runs a second time.
+
+    Output trees are therefore excluded, and everything else - every .py, every
+    config, every dependency file - still counts. Untracked files count too: a
+    stray module can change behaviour just as easily as an edited one.
+    """
+    status = _git("status", "--porcelain")
+    if not status:
+        return []
+    dirty: list[str] = []
+    for line in status.splitlines():
+        if len(line) < 4:
+            continue
+        path = line[3:].strip().strip('"')
+        # Rename entries are "old -> new"; judge the destination.
+        if " -> " in path:
+            path = path.split(" -> ", 1)[1]
+        if path.startswith(_NON_CODE_PREFIXES):
+            continue
+        dirty.append(path)
+    return sorted(dirty)
+
+
 def get_run_context(seed: Optional[int] = None, extra: Optional[dict] = None) -> dict:
     """
     Snapshot everything needed to reproduce a run: git state, argv, library versions,
@@ -116,12 +156,16 @@ def get_run_context(seed: Optional[int] = None, extra: Optional[dict] = None) ->
     ``git_dirty=True`` in a run.json means the code that produced the metric is not
     the code at that SHA. Treat such runs as non-reportable.
     """
+    dirty_paths = _dirty_code_paths()
     ctx: dict[str, Any] = {
         "started_at": datetime.now(tz=timezone.utc).isoformat(),
         "seed": seed,
         "git_sha": _git("rev-parse", "HEAD"),
         "git_branch": _git("rev-parse", "--abbrev-ref", "HEAD"),
-        "git_dirty": bool(_git("status", "--porcelain")),
+        "git_dirty": bool(dirty_paths),
+        # WHAT was dirty, not just that something was. A bare boolean turned a
+        # one-line diagnosis into a hunt.
+        "git_dirty_paths": dirty_paths[:20],
         "argv": sys.argv,
         "python": platform.python_version(),
         "platform": platform.platform(),
