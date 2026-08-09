@@ -15,7 +15,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Map, Table, BarChart2, Upload, ListOrdered,
   Info, Activity, Radio, LogOut, Shield, MapPin, ChevronDown,
-  Trash2, Menu, X, Award, Inbox, Wrench, Gauge, Sparkles, Compass, HelpCircle,
+  Trash2, Menu, X, Award, Inbox, Wrench, Sparkles, Compass, HelpCircle,
   MoreHorizontal,
 } from 'lucide-react'
 import { deleteMyAccount } from '../utils/api'
@@ -48,26 +48,30 @@ const MORE_GROUP = {
   ],
 }
 
-// Operator pages, grouped so the bar stays readable.
+/**
+ * Operator pages, grouped so the bar stays readable.
+ *
+ * Survey answers "what is out there", Operations answers "what are we doing
+ * about it". Explorer and Repairs used to be separate entries that showed the
+ * same detections twice, and Triage and Work orders were two halves of one
+ * workflow; each pair is now a single destination with a view switch inside.
+ */
 const OPERATOR_GROUPS = [
   {
     label: 'Survey',
     icon: Compass,
     items: [
-      { to: '/map',      label: 'Map',      icon: Map,      hint: 'Detected damage on the map' },
-      { to: '/explorer', label: 'Explorer', icon: Table,    hint: 'Every record in a table' },
-      { to: '/stats',    label: 'Stats',    icon: BarChart2, hint: 'Analytics and operations' },
-      { to: '/ingest',   label: 'Upload',   icon: Upload,   hint: 'Process new dashcam video' },
+      { to: '/map',    label: 'Map',    icon: Map,       hint: 'Detections and road quality, one surface' },
+      { to: '/damage', label: 'Damage', icon: ListOrdered, hint: 'Repair queue and the full record' },
+      { to: '/stats',  label: 'Stats',  icon: BarChart2, hint: 'Analytics and operations' },
+      { to: '/ingest', label: 'Upload', icon: Upload,    hint: 'Process new dashcam video' },
     ],
   },
   {
     label: 'Operations',
     icon: Wrench,
     items: [
-      { to: '/triage',     label: 'Triage',      icon: Inbox,       hint: 'Review citizen reports' },
-      { to: '/workorders', label: 'Work orders', icon: Wrench,      hint: 'Plan and track repairs' },
-      { to: '/priority',   label: 'Repairs',     icon: ListOrdered, hint: 'Ranked repair queue' },
-      { to: '/quality',    label: 'Quality',     icon: Gauge,       hint: 'Road Quality Index' },
+      { to: '/operations', label: 'Operations', icon: Inbox, hint: 'Citizen reports and crew work orders' },
     ],
   },
 ]

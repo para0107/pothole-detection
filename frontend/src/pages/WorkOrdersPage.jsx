@@ -53,7 +53,12 @@ const num = (v) => {
   return Number.isFinite(n) ? n : null
 }
 
-export default function WorkOrdersPage() {
+/**
+ * `embedded` is set when OperationsPage mounts this as its Orders tab: the
+ * layout supplies the page padding and the title, so those are skipped, but
+ * the Refresh / New work order actions stay. Rendered on its own, unchanged.
+ */
+export default function WorkOrdersPage({ embedded = false }) {
   const isMobile = useIsMobile()
   const location = useLocation()
   const preselected = useMemo(
@@ -253,7 +258,7 @@ export default function WorkOrdersPage() {
 
   // ── Render ────────────────────────────────────────────────────────────
   return (
-    <div className="page-grid-bg" style={styles.page}>
+    <div className="page-grid-bg" style={embedded ? styles.pageEmbedded : styles.page}>
       {/* Scoped skin for the vendored SpotlightCard (it ships its own dark
           hardcoded look; two classes beat one, so these win in both themes). */}
       <style>{`
@@ -274,15 +279,17 @@ export default function WorkOrdersPage() {
       `}</style>
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="anim-fade-up" style={{ marginBottom: 22 }}>
+      <div className="anim-fade-up" style={{ marginBottom: embedded ? 14 : 22 }}>
         <div style={styles.headRow}>
-          <div>
-            <div className="overline" style={{ color: 'var(--accent)', marginBottom: 6 }}>
-              Repair workflow
+          {!embedded && (
+            <div>
+              <div className="overline" style={{ color: 'var(--accent)', marginBottom: 6 }}>
+                Repair workflow
+              </div>
+              <h1 className="display" style={styles.h1}>Work orders</h1>
             </div>
-            <h1 className="display" style={styles.h1}>Work orders</h1>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          )}
+          <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
             <button className="btn btn-sm" onClick={reload} disabled={loading}>
               <RefreshCw size={13} /> Refresh
             </button>
@@ -291,10 +298,14 @@ export default function WorkOrdersPage() {
             </button>
           </div>
         </div>
-        <div className="road-divider" style={{ margin: '14px 0 12px' }} />
-        <p style={styles.lede}>
-          A work order groups nearby damage into one job for one crew, and moves from open to verified.
-        </p>
+        {!embedded && (
+          <>
+            <div className="road-divider" style={{ margin: '14px 0 12px' }} />
+            <p style={styles.lede}>
+              A work order groups nearby damage into one job for one crew, and moves from open to verified.
+            </p>
+          </>
+        )}
       </div>
 
       {/* ── Board ──────────────────────────────────────────────────────── */}
@@ -310,7 +321,7 @@ export default function WorkOrdersPage() {
         <EmptyState
           icon={ClipboardList}
           title="No work orders yet"
-          sub="Create one from the Repairs page, or by selecting a zone on the Map."
+          sub="Create one from the Damage queue, or by selecting a zone on the Map."
         />
       ) : isMobile ? (
         <>
@@ -396,8 +407,8 @@ export default function WorkOrdersPage() {
               </div>
             ) : (
               <div style={styles.hintNote}>
-                This page cannot pick damage sites on its own. Create work orders from the Repairs page,
-                or by selecting a zone on the Map.
+                This tab cannot pick damage sites on its own. Select them in the Damage queue,
+                or by drawing a zone on the Map.
               </div>
             )}
 
@@ -792,6 +803,8 @@ function OrderCard({ order, index, onOpen, showStatus = false }) {
 // ── Styles ──────────────────────────────────────────────────────────────────
 
 const styles = {
+  // Embedded in OperationsPage the layout owns the top padding and width.
+  pageEmbedded: { minHeight: 0, paddingBottom: 40 },
   page: {
     minHeight: '100%',
     paddingTop: 'calc(var(--nav-h) + 28px)',

@@ -6,8 +6,9 @@
  */
 
 import React from 'react'
-import { SEVERITY_COLORS, SEVERITY_LABELS, CLASS_COLORS, CLASS_LABELS, CLASS_ICONS } from '../utils/constants'
+import { SEVERITY_COLORS, SEVERITY_LABELS, CLASS_COLORS, CLASS_LABELS } from '../utils/constants'
 import useCountUp from '../hooks/useCountUp'
+import DamageGlyph from './DamageGlyph'
 
 // ── Severity badge ────────────────────────────────────────────────────────
 export function SevBadge({ s, compact = false }) {
@@ -56,17 +57,21 @@ export function ClassChip({ cls, count, active = true, onClick }) {
   )
 }
 
-// ── Class icon dot ────────────────────────────────────────────────────────
-export function ClassDot({ cls, size = 26 }) {
-  const color = CLASS_COLORS[cls] || '#888'
+// ── Class icon tile ───────────────────────────────────────────────────────
+// The mark is drawn (see DamageGlyph) rather than a Unicode character, so it
+// renders identically everywhere and actually depicts the fault. The tile is a
+// tint of the class colour with a hairline ring — no hard border, which at
+// row density read as a grid of boxes rather than a column of marks.
+export function ClassDot({ cls, size = 26, title }) {
+  const color = CLASS_COLORS[cls] || 'var(--text-muted)'
   return (
     <span style={{
-      width: size, height: size, borderRadius: 2, flexShrink: 0,
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      background: `${color}1c`, border: `1px solid ${color}44`,
-      color, fontSize: size * 0.55,
+      width: size, height: size, borderRadius: Math.round(size * 0.3), flexShrink: 0,
+      display: 'inline-grid', placeItems: 'center', color,
+      background: `color-mix(in srgb, ${color} 13%, transparent)`,
+      boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${color} 26%, transparent)`,
     }}>
-      {CLASS_ICONS[cls] || '●'}
+      <DamageGlyph type={cls} size={Math.round(size * 0.62)} title={title} />
     </span>
   )
 }

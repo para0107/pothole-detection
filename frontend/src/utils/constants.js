@@ -38,18 +38,10 @@ export const CLASS_LABELS = {
   rutting:                   'Rutting',
 }
 
-export const CLASS_ICONS = {
-  longitudinal_crack:        '〰',
-  transverse_crack:          '═',
-  alligator_crack:           '⬡',
-  repaired_crack:            '✔',
-  pothole:                   '⬤',
-  pedestrian_crossing_blur:  '⛜',
-  lane_line_blur:            '─',
-  manhole_cover:             '◎',
-  patchy_road:               '▦',
-  rutting:                   '∿',
-}
+// Damage-class marks are DRAWN, in components/DamageGlyph.jsx. A map of
+// Unicode characters used to live here; it rendered differently on every font
+// stack, fell back to tofu for some classes, and none of the symbols actually
+// depicted the fault.
 
 export const ALL_CLASSES = Object.keys(CLASS_LABELS)
 
@@ -183,15 +175,18 @@ export const WORK_ORDER_COLORS = {
 export const WORK_ORDER_BOARD = ['open', 'scheduled', 'in_progress', 'repaired', 'verified']
 
 // ── Badges (mirrors BADGES in backend/gamification.py) ───────────────────
+// Label and description only. The mark comes from BADGE_ICONS below, which is
+// lucide — an `icon:` field of emoji used to sit here as well, unread by any
+// component since the drawn icons landed.
 export const BADGES = {
-  first_report:   { label: 'First report',   icon: '🚩', description: 'Sent a first hazard report.' },
-  confirmed_10:   { label: 'Road scout',     icon: '🔎', description: 'Ten of your reports were confirmed.' },
-  confirmed_50:   { label: 'Road guardian',  icon: '🛡️', description: 'Fifty of your reports were confirmed.' },
-  verified_first: { label: 'Triple checked', icon: '✅', description: 'A report of yours reached verified.' },
-  streak_7:       { label: 'Week streak',    icon: '🔥', description: 'Reported on seven days in a row.' },
-  fixed_1:        { label: 'Fixer',          icon: '🔧', description: 'A hazard you reported was repaired.' },
-  fixed_5:        { label: 'City changer',   icon: '🏙️', description: 'Five hazards you reported were repaired.' },
-  night_reporter: { label: 'Night watch',    icon: '🌙', description: 'Reported a hazard late at night.' },
+  first_report:   { label: 'First report',   description: 'Sent a first hazard report.' },
+  confirmed_10:   { label: 'Road scout',     description: 'Ten of your reports were confirmed.' },
+  confirmed_50:   { label: 'Road guardian',  description: 'Fifty of your reports were confirmed.' },
+  verified_first: { label: 'Triple checked', description: 'A report of yours reached verified.' },
+  streak_7:       { label: 'Week streak',    description: 'Reported on seven days in a row.' },
+  fixed_1:        { label: 'Fixer',          description: 'A hazard you reported was repaired.' },
+  fixed_5:        { label: 'City changer',   description: 'Five hazards you reported were repaired.' },
+  night_reporter: { label: 'Night watch',    description: 'Reported a hazard late at night.' },
 }
 
 export const ALL_BADGE_KEYS = Object.keys(BADGES)

@@ -11,20 +11,21 @@ import OnboardingTour from './components/OnboardingTour'
 // heavy vendors (leaflet, recharts, animation libs) into their own chunks too,
 // and the assistant's model runtimes are dynamic imports on top of that.
 const HomePage       = lazy(() => import('./pages/HomePage'))
-const MapPage        = lazy(() => import('./pages/MapPage'))
+// MapPage and QualityPage are no longer routed directly — MapWorkspacePage
+// mounts one or the other as the Detections / Quality layer of a single map.
+const MapWorkspacePage = lazy(() => import('./pages/MapWorkspacePage'))
 const StatsPage      = lazy(() => import('./pages/StatsPage'))
-const ExplorerPage   = lazy(() => import('./pages/ExplorerPage'))
+const DamagePage     = lazy(() => import('./pages/DamagePage'))
 const IngestionPage  = lazy(() => import('./pages/IngestionPage'))
-const PriorityPage   = lazy(() => import('./pages/PriorityPage'))
 const AboutPage      = lazy(() => import('./pages/AboutPage'))
 const LivePage       = lazy(() => import('./pages/LivePage'))
 const LoginPage      = lazy(() => import('./pages/LoginPage'))
 const RegisterPage   = lazy(() => import('./pages/RegisterPage'))
 const AdminPage      = lazy(() => import('./pages/AdminPage'))
 const ImpactPage     = lazy(() => import('./pages/ImpactPage'))
-const TriagePage     = lazy(() => import('./pages/TriagePage'))
-const WorkOrdersPage = lazy(() => import('./pages/WorkOrdersPage'))
-const QualityPage    = lazy(() => import('./pages/QualityPage'))
+// Triage and WorkOrders are no longer routed directly — OperationsPage mounts
+// them as its two tabs and is the single destination for the repair workflow.
+const OperationsPage = lazy(() => import('./pages/OperationsPage'))
 const AssistantPage  = lazy(() => import('./pages/AssistantPage'))
 const PricingPage    = lazy(() => import('./pages/PricingPage'))
 const DevelopersPage = lazy(() => import('./pages/DevelopersPage'))
@@ -122,14 +123,20 @@ export default function App() {
           <Route path="/admin"     element={<RequireAuth><AdminPage /></RequireAuth>} />
 
           {/* Operator only */}
-          <Route path="/map"        element={operatorRoute(<MapPage />)} />
+          <Route path="/map"        element={operatorRoute(<MapWorkspacePage />)} />
           <Route path="/stats"      element={operatorRoute(<StatsPage />)} />
-          <Route path="/explorer"   element={operatorRoute(<ExplorerPage />)} />
-          <Route path="/priority"   element={operatorRoute(<PriorityPage />)} />
+          <Route path="/damage"     element={operatorRoute(<DamagePage />)} />
+          <Route path="/operations" element={operatorRoute(<OperationsPage />)} />
           <Route path="/ingest"     element={operatorRoute(<IngestionPage />)} />
-          <Route path="/triage"     element={operatorRoute(<TriagePage />)} />
-          <Route path="/workorders" element={operatorRoute(<WorkOrdersPage />)} />
-          <Route path="/quality"    element={operatorRoute(<QualityPage />)} />
+
+          {/* Retired routes. Explorer/Priority became the two views of Damage
+              and Triage/WorkOrders the two tabs of Operations; these keep old
+              links, bookmarks and anything a crew wrote down still working. */}
+          <Route path="/explorer"   element={<Navigate to="/damage?view=table" replace />} />
+          <Route path="/priority"   element={<Navigate to="/damage" replace />} />
+          <Route path="/triage"     element={<Navigate to="/operations" replace />} />
+          <Route path="/workorders" element={<Navigate to="/operations?tab=orders" replace />} />
+          <Route path="/quality"    element={<Navigate to="/map?layer=quality" replace />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

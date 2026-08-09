@@ -41,7 +41,12 @@ function errMsg(err) {
 
 const tally = (list, status) => list.filter(e => e.status === status).length
 
-export default function TriagePage() {
+/**
+ * `embedded` is set when OperationsPage mounts this as its Inbox tab: the
+ * layout already supplies the page padding and the title, so both are skipped
+ * here. Rendered on its own the page is unchanged.
+ */
+export default function TriagePage({ embedded = false }) {
   const isMobile = useIsMobile()
 
   const [filter, setFilter] = useState('all')
@@ -146,7 +151,7 @@ export default function TriagePage() {
 
   // ── Render ──────────────────────────────────────────────────────────────
   return (
-    <div className="page-grid-bg" style={styles.page}>
+    <div className="page-grid-bg" style={embedded ? styles.pageEmbedded : styles.page}>
       {/* SpotlightCard ships its own dark, hardcoded surface (#111 / #222 /
           2rem). Re-skin it with the design tokens so it matches the house
           cards and still works in the light theme. Two classes = higher
@@ -164,14 +169,16 @@ export default function TriagePage() {
       `}</style>
 
       {/* Header */}
-      <div className="anim-fade-up">
-        <div className="overline" style={{ color: 'var(--accent)', marginBottom: 6 }}>Citizen reports</div>
-        <h1 className="display" style={styles.h1}>Triage</h1>
-        <div className="road-divider" style={{ margin: '14px 0 12px' }} />
-        <p style={styles.lede}>
-          Reports that several drivers confirmed independently are the most reliable, so they are listed first.
-        </p>
-      </div>
+      {!embedded && (
+        <div className="anim-fade-up">
+          <div className="overline" style={{ color: 'var(--accent)', marginBottom: 6 }}>Citizen reports</div>
+          <h1 className="display" style={styles.h1}>Triage</h1>
+          <div className="road-divider" style={{ margin: '14px 0 12px' }} />
+          <p style={styles.lede}>
+            Reports that several drivers confirmed independently are the most reliable, so they are listed first.
+          </p>
+        </div>
+      )}
 
       {/* KPI strip */}
       <div style={styles.kpiGrid}>
@@ -336,6 +343,8 @@ export default function TriagePage() {
 }
 
 const styles = {
+  // Embedded in OperationsPage the layout owns the top padding and width.
+  pageEmbedded: { minHeight: 0, paddingBottom: 40 },
   page: {
     minHeight: '100%',
     paddingTop: 'calc(var(--nav-h) + 28px)',

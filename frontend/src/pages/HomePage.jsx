@@ -23,9 +23,7 @@ import {
 } from '../utils/constants'
 import { Kpi, SectionTitle } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
-import useMotionOk from '../hooks/useMotionOk'
 import { useIsDark } from '../hooks/useTheme'
-import SplitText from '../reactbits/SplitText/SplitText'
 
 const STAGE_ICONS = [ScanLine, Radar, Layers, Ruler, Gauge, Copy, Database]
 
@@ -34,7 +32,6 @@ export default function HomePage() {
   const { user, isOperator } = useAuth()
   const { data: stats } = useApi(fetchStats, [])
   const cityName = user?.city || 'your city'
-  const motionOk = useMotionOk()
   const isDark = useIsDark()
 
   const severityData = useMemo(() => {
@@ -90,27 +87,17 @@ export default function HomePage() {
               {(user?.city || 'ROAD INTELLIGENCE NETWORK').toUpperCase()}
             </div>
 
-            {motionOk ? (
-              <h1 className="display" style={styles.heroTitle}>
-                <SplitText
-                  text="Every street. Every crack."
-                  tag="span"
-                  splitType="chars"
-                  delay={22}
-                  duration={0.8}
-                  textAlign="left"
-                  className="display"
-                />
-                <br />
-                <span style={{ color: 'var(--accent)' }}>Mapped &amp; ranked.</span>
-              </h1>
-            ) : (
-              <h1 className="display anim-fade-up delay-1" style={styles.heroTitle}>
-                Every street.<br />
-                Every crack.<br />
-                <span style={{ color: 'var(--accent)' }}>Mapped &amp; ranked.</span>
-              </h1>
-            )}
+            {/* Plain heading with a CSS fade. The per-character GSAP split
+                this replaced hung the text's visibility on a ScrollTrigger
+                measured before layout settled: it dropped characters ("Every"
+                rendered as "y") and, when the trigger never fired, blanked the
+                line entirely. It did the same to About and Pricing, so the
+                component is gone from the app rather than worked around. */}
+            <h1 className="display anim-fade-up delay-1" style={styles.heroTitle}>
+              Every street.<br />
+              Every crack.<br />
+              <span style={{ color: 'var(--accent)' }}>Mapped &amp; ranked.</span>
+            </h1>
 
             <div className="road-divider anim-fade-up delay-2" style={{ width: 180, margin: '22px 0' }} />
             <p className="anim-fade-up delay-2" style={styles.heroSub}>
@@ -264,11 +251,11 @@ export default function HomePage() {
             {isOperator ? (
               <>
                 <QuickAction
-                  to="/priority" icon={ListOrdered} title="Repair planner"
+                  to="/damage" icon={ListOrdered} title="Repair planner"
                   sub="Ranked repair queue with cost estimates" delay="delay-1"
                 />
                 <QuickAction
-                  to="/explorer" icon={Table} title="Detection explorer"
+                  to="/damage?view=table" icon={Table} title="Detection audit"
                   sub="Filter, sort, export and audit every record" delay="delay-2"
                 />
                 <QuickAction

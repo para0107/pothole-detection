@@ -394,6 +394,18 @@ html, body, #root {
   color: var(--accent);
 }
 
+/* Press feedback for things that are not <button> — a selectable row, a card
+   that toggles. The response lands on pointer-down, not on release: waiting
+   for the click to acknowledge a press is the single cheapest way to make an
+   interface feel dead. */
+.pressable {
+  transition: transform 0.1s cubic-bezier(0.2, 0.7, 0.3, 1),
+              border-color 0.16s cubic-bezier(0.2, 0.7, 0.3, 1),
+              background 0.16s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.pressable:active { transform: scale(0.988); }
+@media (prefers-reduced-motion: reduce) { .pressable:active { transform: none; } }
+
 /* ─── Chips / tags ──────────────────────────────────────────────────────── */
 .chip {
   display: inline-flex;

@@ -29,9 +29,10 @@ import {
   Volume2, VolumeX,
 } from 'lucide-react'
 import {
-  CLASS_COLORS, CLASS_LABELS, CLASS_ICONS, ALL_CLASSES,
+  CLASS_COLORS, CLASS_LABELS, ALL_CLASSES,
   SEVERITY_COLORS, CITY_ZOOM, BASEMAPS,
 } from '../utils/constants'
+import DamageGlyph from '../components/DamageGlyph'
 import {
   getDeviceId, fetchLiveEvents, fetchLiveStats,
   postLiveReport, confirmLiveEvent, disputeLiveEvent, resolveLiveEvent,
@@ -898,7 +899,7 @@ export default function LivePage() {
                 }}
                 onClick={() => submitReport(c)}
               >
-                <span style={{ color: CLASS_COLORS[c], fontSize: 14 }}>{CLASS_ICONS[c]}</span>
+                <DamageGlyph type={c} size={16} style={{ color: CLASS_COLORS[c], flexShrink: 0 }} />
                 <span style={{ fontSize: 12 }}>{CLASS_LABELS[c]}</span>
               </button>
             ))}

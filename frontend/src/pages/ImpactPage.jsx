@@ -12,7 +12,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Award, MapPin, CheckCircle2, Wrench, Flame, Trophy, AlertTriangle, Inbox,
+  Award, MapPin, CheckCircle2, Wrench, Flame, Trophy, AlertTriangle, Inbox, Medal,
 } from 'lucide-react'
 import { fetchMyImpact, fetchLeaderboard } from '../utils/api'
 import { fmtDate, fmtCoord, fmtNum } from '../utils/format'
@@ -40,7 +40,13 @@ const SPOTLIGHT_SKIN = `
 }
 `
 
-const MEDALS = { 1: '🥇', 2: '🥈', 3: '🥉' }
+/**
+ * Podium ranks get a drawn medal rather than 🥇🥈🥉. The emoji rendered at a
+ * different size and baseline than the mono rank numbers beside them, so the
+ * column never lined up, and on Windows they arrive in full colour that fights
+ * every other mark on the page.
+ */
+const PODIUM_TINT = { 1: 1, 2: 0.72, 3: 0.5 }
 
 /** Section wrapper. GSAP reveals it on scroll, but only when motion is on —
  *  AnimatedContent starts hidden, so with motion off we render a plain div and
@@ -333,8 +339,13 @@ export default function ImpactPage() {
                       <span className="mono" style={{
                         ...styles.lbRank,
                         color: row.rank <= 3 ? 'var(--accent)' : 'var(--text-muted)',
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
                       }}>
-                        {MEDALS[row.rank] || `#${row.rank}`}
+                        {row.rank <= 3 && (
+                          <Medal size={13} strokeWidth={2}
+                                 style={{ opacity: PODIUM_TINT[row.rank], flexShrink: 0 }} />
+                        )}
+                        {row.rank}
                       </span>
 
                       <span style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8 }}>

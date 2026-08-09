@@ -16,10 +16,10 @@ import { BarChart, Bar, ResponsiveContainer, XAxis, Tooltip } from 'recharts'
 import { MapContainer, TileLayer, CircleMarker, useMap, useMapEvents, Rectangle } from 'react-leaflet'
 import {
   FileText, RefreshCw, Eye, EyeOff, AlertTriangle, Flame, PenTool, XCircle,
-  Radio, X, CheckCircle2, Trash2, Crosshair, MapPin, ChevronDown, Wrench,
+  Radio, X, CheckCircle2, Trash2, Crosshair, MapPin, ChevronDown, ChevronUp, Wrench,
 } from 'lucide-react'
 import {
-  CLASS_COLORS, CLASS_LABELS, CLASS_ICONS,
+  CLASS_COLORS, CLASS_LABELS,
   SEVERITY_COLORS, SEVERITY_LABELS, SEVERITY_ACTIONS,
   CITY_ZOOM, BASEMAPS,
 } from '../utils/constants'
@@ -280,7 +280,7 @@ export default function MapPage() {
     return () => { alive = false }
   }, [user?.city])
 
-  // Focus request coming from ExplorerPage ("Show on map")
+  // Focus request coming from the Damage table ("Show on map")
   const routerLocation = useLocation()
   const focusDone = useRef(false)
   const navigate = useNavigate()
@@ -328,7 +328,7 @@ export default function MapPage() {
 
   useEffect(() => { refreshData(false) }, [refreshData])
 
-  // Fly to + open the detection requested by ExplorerPage's "Show on map".
+  // Fly to + open the detection requested by the Damage table's "Show on map".
   useEffect(() => {
     const focus = routerLocation.state?.focus
     if (!focus || focusDone.current || detections.length === 0) return
@@ -780,8 +780,10 @@ export default function MapPage() {
               <EyeOff size={11} /> NONE
             </button>
             <button className="btn btn-sm btn-ghost" style={styles.tinyBtn}
-              onClick={() => setShowLegend(v => !v)}>
-              {showLegend ? '▾' : '▴'}
+              onClick={() => setShowLegend(v => !v)}
+              aria-label={showLegend ? 'Hide legend' : 'Show legend'}
+              aria-expanded={showLegend}>
+              {showLegend ? <ChevronDown size={11} /> : <ChevronUp size={11} />}
             </button>
           </div>
         </div>
@@ -882,7 +884,10 @@ export default function MapPage() {
               className="btn btn-sm btn-accent"
               style={{ width: '100%', justifyContent: 'center' }}
               disabled={visible.length === 0}
-              onClick={() => navigate('/workorders', {
+              /* Straight to the Orders tab, not through the /workorders
+                 redirect: <Navigate> drops location state, which is exactly
+                 how the selected detection ids travel. */
+              onClick={() => navigate('/operations?tab=orders', {
                 state: { detectionIds: visible.slice(0, 200).map(d => d.id) },
               })}
             >

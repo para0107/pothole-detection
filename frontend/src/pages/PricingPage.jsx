@@ -19,11 +19,9 @@ import {
 } from 'lucide-react'
 import { fetchAuthConfig, contactSales } from '../utils/api'
 import { SectionTitle, Spinner } from '../components/ui'
-import useMotionOk from '../hooks/useMotionOk'
 import useIsMobile from '../hooks/useIsMobile'
 import SpotlightCard from '../reactbits/SpotlightCard/SpotlightCard'
 import Aurora from '../reactbits/Aurora/Aurora'
-import SplitText from '../reactbits/SplitText/SplitText'
 import ShinyText from '../reactbits/ShinyText/ShinyText'
 
 /* SpotlightCard ships with a hard-coded dark shell (#111 / #222). Re-skin it
@@ -142,7 +140,6 @@ const COMPARE = [
 ]
 
 export default function PricingPage() {
-  const motionOk = useMotionOk()
   const isMobile = useIsMobile()
   const contactRef = useRef(null)
 
@@ -164,21 +161,11 @@ export default function PricingPage() {
             Pricing
           </div>
 
-          {motionOk ? (
-            <SplitText
-              text="Plans that fit a city budget"
-              tag="h1"
-              className="display pricing-hero-title"
-              splitType="words"
-              delay={38}
-              duration={0.8}
-              textAlign="left"
-            />
-          ) : (
-            <h1 className="display anim-fade-up delay-1" style={styles.heroTitle}>
-              Plans that fit a city budget
-            </h1>
-          )}
+          {/* See AboutPage: the per-word GSAP split could leave the opening
+              words permanently invisible, so headings are plain text. */}
+          <h1 className="display anim-fade-up delay-1" style={styles.heroTitle}>
+            Plans that fit a city budget
+          </h1>
 
           <div className="road-divider anim-fade-up delay-2" style={{ width: 180, margin: '22px 0' }} />
 
