@@ -158,10 +158,27 @@ def main() -> int:
     print(f"[plan] {len(needed)} data variant(s) needed for this queue:")
     for v, exps in sorted(needed.items()):
         print(f"  staged_{v:18s} <- {', '.join(sorted(exps))}")
-    print(f"\n[plan] source={source}\n[plan] out={out}\n[plan] hash={args.hash_algo}")
-    if args.hash_algo == "none":
-        print("[plan] near-duplicate detection OFF: exact SHA-256 dedupe only. This is "
-              "the safe default until --calibrate-hash says otherwise.")
+    # Report the hash setting the recipes will ACTUALLY use, not this script's
+    # override flag. They diverged once the calibrated dhash/2 setting moved into
+    # DATA_VARIANTS, and a log line that says "none" while the command says "dhash"
+    # is exactly the kind of thing that gets believed months later.
+    if args.hash_algo != "none":
+        effective = f"{args.hash_algo} (override)"
+        if args.hash_threshold is not None:
+            effective += f" @ threshold {args.hash_threshold}"
+    else:
+        recipe = DATA_VARIANTS[next(iter(needed))]["stage_args"]
+        if "--hash" in recipe:
+            i = recipe.index("--hash")
+            effective = f"{recipe[i + 1]} (from the recipe)"
+            if "--hash-threshold" in recipe:
+                effective += f" @ threshold {recipe[recipe.index('--hash-threshold') + 1]}"
+        else:
+            effective = "none"
+    print(f"\n[plan] source={source}\n[plan] out={out}\n[plan] hash={effective}")
+    if effective.startswith("none"):
+        print("[plan] near-duplicate detection OFF: exact SHA-256 dedupe only. Run "
+              "stage_dataset.py --calibrate-hash before turning it on.")
 
     out.mkdir(parents=True, exist_ok=True)
     results: list[dict] = []

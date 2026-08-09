@@ -128,6 +128,43 @@ def find_data_yaml(explicit: Optional[str], data_dir: Path) -> Path:
     return (preferred or candidates)[0]
 
 
+def resolve_data_root(explicit: Optional[str], yaml_path: Path, fallback: Path) -> Path:
+    """
+    The directory the given yaml's splits actually live under.
+
+    WHY THIS IS NOT JUST `sagemaker_paths()["data"]`.
+    That helper returns one fixed location (`<repo>/data/detection` off SageMaker,
+    the input channel on it), which assumes the job trains on exactly one canonical
+    dataset. E9 and E10 break that assumption: each variant is a SEPARATE staged
+    directory, and `weekend.py --data-root` hands a different `--data` to each run.
+    Overriding that with the fixed root pointed every variant at a path that does not
+    exist, and all eleven runs failed in 46 seconds.
+
+    Resolution order:
+      1. the `path:` recorded inside the yaml, if it is a real directory - this is
+         what `stage_dataset.py` writes and it is authoritative;
+      2. the yaml's own parent directory, which is the layout stage_dataset produces;
+      3. `fallback`, for the SageMaker case where the data arrives in a channel and
+         the yaml's recorded path refers to wherever it was built.
+
+    Only steps 1 and 2 are reachable when --data was passed explicitly, so a caller
+    that names a yaml always gets that yaml's data.
+    """
+    if explicit:
+        try:
+            for line in yaml_path.read_text(encoding="utf-8").splitlines():
+                if line.startswith("path:"):
+                    root = Path(line.split(":", 1)[1].strip())
+                    if (root / "val" / "images").is_dir():
+                        return root
+                    break
+        except OSError:
+            pass
+        if (yaml_path.parent / "val" / "images").is_dir():
+            return yaml_path.parent
+    return fallback
+
+
 def rewrite_yaml_path(yaml_path: Path, new_root: Path, out_dir: Path) -> Path:
     """
     Rewrite the yaml's `path:` to where the data actually is.
@@ -275,19 +312,27 @@ def run_experiment(
     class_set = CLASS_SETS[spec.class_set]
     dataset_spec = get_dataset(spec.dataset)
 
+    # Where this run's data actually is. Must be derived from the yaml we were handed,
+    # not from the fixed channel path - see resolve_data_root.
+    yaml_src = find_data_yaml(data_yaml, paths["data"])
+    data_root = resolve_data_root(data_yaml, yaml_src, paths["data"])
+
     if spec.class_set == "all10" and spec.dataset == "nrdd2024":
         # Fast path: the canonical schema needs no rewriting.
-        yaml_src = find_data_yaml(data_yaml, paths["data"])
-        yaml_path = rewrite_yaml_path(yaml_src, paths["data"], run.path / "data")
-        effective_root = paths["data"]
+        yaml_path = rewrite_yaml_path(yaml_src, data_root, run.path / "data")
+        effective_root = data_root
         print(f"[data] {yaml_src} -> {yaml_path} (root {effective_root})")
     else:
-        view_root = Path(os.environ.get("SM_SCRATCH", "/tmp")) / f"view_{spec.class_set}"
+        # The derived view must be per-variant as well as per-class-set: E8 on the
+        # standard split and a future E8 on a LOCO split are different datasets and
+        # must not collide in scratch.
+        view_root = (Path(os.environ.get("SM_SCRATCH", "/tmp"))
+                     / f"view_{spec.class_set}_{data_root.name}")
         print(f"[data] deriving class set '{spec.class_set}' "
-              f"({len(class_set.keep)} classes) from {paths['data']}")
+              f"({len(class_set.keep)} classes) from {data_root}")
         print(f"[data] dropping: {', '.join(class_set.dropped(dataset_spec.classes)) or '(none)'}")
         yaml_path = materialise_class_set(
-            src_root=paths["data"],
+            src_root=data_root,
             dst_root=view_root,
             class_set=class_set,
             source_names=dataset_spec.classes,
@@ -299,7 +344,11 @@ def run_experiment(
         # Fingerprint the CANONICAL data, not the derived view: the view is a
         # deterministic function of (canonical data, class set), both of which are
         # already recorded, so hashing it would add nothing and cost a full rescan.
-        ds_hash = hash_dataset(paths["data"])
+        # data_root, not paths["data"]: with E9/E10 each run trains on a different
+        # staged variant, and fingerprinting the fixed channel would stamp every run
+        # with the SAME dataset hash - which is exactly the provenance claim the
+        # manifest is supposed to make impossible to fake.
+        ds_hash = hash_dataset(data_root)
     except (FileNotFoundError, OSError) as exc:
         ds_hash = {"error": str(exc)}
         print(f"[data] WARNING: could not fingerprint dataset: {exc}", file=sys.stderr)
