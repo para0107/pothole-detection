@@ -95,3 +95,7 @@ frontend/src/pages/variants
 Weekend2
 runs/research/*/weights/
 AWS_AI_Research_Summer_School_EPFL
+ml/aws
+ml/research
+EXPERIMENTS.md
+vercel.json
