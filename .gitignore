@@ -90,6 +90,11 @@ landing-redraw
 # Legacy directories, kept so they stay ignored if they reappear
 /Documentation
 /latex
+<<<<<<< HEAD
 frontend/src/pages/variants
 .vite
 Weekend2
+=======
+frontend/src/pages/variantsruns/research/*/weights/
+*.pt
+>>>>>>> origin/master

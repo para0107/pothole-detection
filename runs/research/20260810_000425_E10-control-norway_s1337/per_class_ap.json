@@ -1,0 +1,18 @@
+{
+  "split": "test",
+  "experiment": "E10-control-norway",
+  "seed": 1337,
+  "per_class_AP50": {
+    "longitudinal_crack": 0.4982376221905476,
+    "transverse_crack": 0.47530040743237567,
+    "alligator_crack": 0.5626100003700649,
+    "repaired_crack": 0.42712653408939205,
+    "pothole": 0.5593866846858719,
+    "pedestrian_crossing_blur": 0.4946392482886196,
+    "lane_line_blur": 0.4576113905083038,
+    "manhole_cover": 0.8277274904922169,
+    "patchy_road": 0.3117521266993536,
+    "rutting": 0.0013414634146341462
+  },
+  "note": "AP@IoU=0.50 per class, PASCAL VOC protocol (Everingham et al. 2010) as implemented by Ultralytics box.ap50. Feeds ml/research/anisotropy.py."
+}
