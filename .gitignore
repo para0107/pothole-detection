@@ -90,4 +90,5 @@ landing-redraw
 # Legacy directories, kept so they stay ignored if they reappear
 /Documentation
 /latex
-frontend/src/pages/variants
+frontend/src/pages/variantsruns/research/*/weights/
+*.pt

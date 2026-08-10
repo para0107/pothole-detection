@@ -38,5 +38,285 @@
     "estimated_h": 2.9,
     "actual_h": 2.58,
     "finished_at": "2026-08-03T21:32:39.832079"
+  },
+  {
+    "experiment": "E0-baseline",
+    "seed": 1337,
+    "returncode": 1,
+    "data_variant": "standard",
+    "data_yaml": "/tmp/data/staged_standard/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 0.0,
+    "finished_at": "2026-08-09T00:33:16.081000"
+  },
+  {
+    "experiment": "E0-baseline",
+    "seed": 1338,
+    "returncode": 1,
+    "data_variant": "standard",
+    "data_yaml": "/tmp/data/staged_standard/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 0.0,
+    "finished_at": "2026-08-09T00:33:20.521294"
+  },
+  {
+    "experiment": "E0-baseline",
+    "seed": 1339,
+    "returncode": 1,
+    "data_variant": "standard",
+    "data_yaml": "/tmp/data/staged_standard/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 0.0,
+    "finished_at": "2026-08-09T00:33:25.001119"
+  },
+  {
+    "experiment": "E9-oversamplenone",
+    "seed": 1337,
+    "returncode": 1,
+    "data_variant": "no_oversample",
+    "data_yaml": "/tmp/data/staged_no_oversample/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 0.0,
+    "finished_at": "2026-08-09T00:33:29.480462"
+  },
+  {
+    "experiment": "E9-oversample60",
+    "seed": 1337,
+    "returncode": 1,
+    "data_variant": "oversample_60",
+    "data_yaml": "/tmp/data/staged_oversample_60/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 0.0,
+    "finished_at": "2026-08-09T00:33:33.931189"
+  },
+  {
+    "experiment": "E8-structural7",
+    "seed": 1337,
+    "returncode": 1,
+    "data_variant": "standard",
+    "data_yaml": "/tmp/data/staged_standard/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 0.0,
+    "finished_at": "2026-08-09T00:33:35.502086"
+  },
+  {
+    "experiment": "E10-loco-norway",
+    "seed": 1337,
+    "returncode": 1,
+    "data_variant": "loco_norway",
+    "data_yaml": "/tmp/data/staged_loco_norway/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 0.0,
+    "finished_at": "2026-08-09T00:33:39.930397"
+  },
+  {
+    "experiment": "E10-control-norway",
+    "seed": 1337,
+    "returncode": 1,
+    "data_variant": "control_2803",
+    "data_yaml": "/tmp/data/staged_control_2803/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 0.0,
+    "finished_at": "2026-08-09T00:33:44.391144"
+  },
+  {
+    "experiment": "E10-loco-india",
+    "seed": 1337,
+    "returncode": 1,
+    "data_variant": "loco_india",
+    "data_yaml": "/tmp/data/staged_loco_india/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 0.0,
+    "finished_at": "2026-08-09T00:33:48.902275"
+  },
+  {
+    "experiment": "E10-control-india",
+    "seed": 1337,
+    "returncode": 1,
+    "data_variant": "control_1221",
+    "data_yaml": "/tmp/data/staged_control_1221/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 0.0,
+    "finished_at": "2026-08-09T00:33:53.390730"
+  },
+  {
+    "experiment": "E3-1024x576",
+    "seed": 1337,
+    "returncode": 1,
+    "data_variant": "standard",
+    "data_yaml": "/tmp/data/staged_standard/dataset_nrdd2024_research.yaml",
+    "estimated_h": 3.74,
+    "actual_h": 0.0,
+    "finished_at": "2026-08-09T00:33:57.900862"
+  },
+  {
+    "experiment": "E0-baseline",
+    "seed": 1337,
+    "returncode": 1,
+    "data_variant": "standard",
+    "data_yaml": "/tmp/data/staged_standard/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 0.19,
+    "finished_at": "2026-08-09T00:48:57.208619"
+  },
+  {
+    "experiment": "E0-baseline",
+    "seed": 1338,
+    "returncode": 1,
+    "data_variant": "standard",
+    "data_yaml": "/tmp/data/staged_standard/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 0.31,
+    "finished_at": "2026-08-09T01:07:44.768422"
+  },
+  {
+    "experiment": "E0-baseline",
+    "seed": 1339,
+    "returncode": 1,
+    "data_variant": "standard",
+    "data_yaml": "/tmp/data/staged_standard/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 0.18,
+    "finished_at": "2026-08-09T01:18:16.583167"
+  },
+  {
+    "experiment": "E9-oversamplenone",
+    "seed": 1337,
+    "returncode": 1,
+    "data_variant": "no_oversample",
+    "data_yaml": "/tmp/data/staged_no_oversample/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 0.11,
+    "finished_at": "2026-08-09T01:25:04.974145"
+  },
+  {
+    "experiment": "E9-oversample60",
+    "seed": 1337,
+    "returncode": 1,
+    "data_variant": "oversample_60",
+    "data_yaml": "/tmp/data/staged_oversample_60/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 0.3,
+    "finished_at": "2026-08-09T01:42:47.739760"
+  },
+  {
+    "experiment": "E8-structural7",
+    "seed": 1337,
+    "returncode": 1,
+    "data_variant": "standard",
+    "data_yaml": "/tmp/data/staged_standard/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 0.17,
+    "finished_at": "2026-08-09T01:53:09.995995"
+  },
+  {
+    "experiment": "E10-loco-norway",
+    "seed": 1337,
+    "returncode": 1,
+    "data_variant": "loco_norway",
+    "data_yaml": "/tmp/data/staged_loco_norway/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 0.17,
+    "finished_at": "2026-08-09T02:03:22.453166"
+  },
+  {
+    "experiment": "E10-control-norway",
+    "seed": 1337,
+    "returncode": 1,
+    "data_variant": "control_2803",
+    "data_yaml": "/tmp/data/staged_control_2803/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 0.18,
+    "finished_at": "2026-08-09T02:14:15.303456"
+  },
+  {
+    "experiment": "E10-loco-india",
+    "seed": 1337,
+    "returncode": 1,
+    "data_variant": "loco_india",
+    "data_yaml": "/tmp/data/staged_loco_india/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 0.2,
+    "finished_at": "2026-08-09T02:26:24.927938"
+  },
+  {
+    "experiment": "E10-control-india",
+    "seed": 1337,
+    "returncode": 1,
+    "data_variant": "control_1221",
+    "data_yaml": "/tmp/data/staged_control_1221/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 0.2,
+    "finished_at": "2026-08-09T02:38:16.174560"
+  },
+  {
+    "experiment": "E3-1024x576",
+    "seed": 1337,
+    "returncode": 1,
+    "data_variant": "standard",
+    "data_yaml": "/tmp/data/staged_standard/dataset_nrdd2024_research.yaml",
+    "estimated_h": 3.74,
+    "actual_h": 0.32,
+    "finished_at": "2026-08-09T02:57:36.350090"
+  },
+  {
+    "experiment": "E0-baseline",
+    "seed": 1337,
+    "returncode": -9,
+    "data_variant": "standard",
+    "data_yaml": "/tmp/data/staged_standard/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 3.58,
+    "finished_at": "2026-08-09T12:44:00.529107"
+  },
+  {
+    "experiment": "E0-baseline",
+    "seed": 1338,
+    "returncode": -9,
+    "data_variant": "standard",
+    "data_yaml": "/tmp/data/staged_standard/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 3.29,
+    "finished_at": "2026-08-09T16:01:40.193756"
+  },
+  {
+    "experiment": "E0-baseline",
+    "seed": 1339,
+    "returncode": 0,
+    "data_variant": "standard",
+    "data_yaml": "/tmp/data/staged_standard/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 4.1,
+    "finished_at": "2026-08-09T20:07:23.783410"
+  },
+  {
+    "experiment": "E10-loco-norway",
+    "seed": 1337,
+    "returncode": 0,
+    "data_variant": "loco_norway",
+    "data_yaml": "/tmp/data/staged_loco_norway/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 3.95,
+    "finished_at": "2026-08-10T00:04:23.764139"
+  },
+  {
+    "experiment": "E10-control-norway",
+    "seed": 1337,
+    "returncode": 0,
+    "data_variant": "control_2803",
+    "data_yaml": "/tmp/data/staged_control_2803/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 4.21,
+    "finished_at": "2026-08-10T04:17:04.503190"
+  },
+  {
+    "experiment": "E10-loco-india",
+    "seed": 1337,
+    "returncode": 0,
+    "data_variant": "loco_india",
+    "data_yaml": "/tmp/data/staged_loco_india/dataset_nrdd2024_research.yaml",
+    "estimated_h": 2.63,
+    "actual_h": 4.73,
+    "finished_at": "2026-08-10T09:00:41.624058"
   }
 ]

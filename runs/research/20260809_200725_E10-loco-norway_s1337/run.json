@@ -1,0 +1,106 @@
+{
+  "started_at": "2026-08-09T20:07:46.589452+00:00",
+  "seed": 1337,
+  "git_sha": "645b7a46fe7b580cb1196ac59b77cdd298ba19c2",
+  "git_branch": "master",
+  "git_dirty": true,
+  "git_dirty_paths": [
+    "weekend2.log"
+  ],
+  "argv": [
+    "/home/sagemaker-user/rdds/ml/detection/train_experiment.py",
+    "--experiment",
+    "E10-loco-norway",
+    "--seed",
+    "1337",
+    "--data",
+    "/tmp/data/staged_loco_norway/dataset_nrdd2024_research.yaml",
+    "--device",
+    "0",
+    "--runs-root",
+    "runs/research",
+    "--epochs",
+    "20"
+  ],
+  "python": "3.12.13",
+  "platform": "Linux-6.12.94-123.192.amzn2023.x86_64-x86_64-with-glibc2.39",
+  "hostname": "default",
+  "sagemaker": false,
+  "torch": "2.8.0+cu129",
+  "cuda": "12.9",
+  "cuda_available": true,
+  "gpu": "NVIDIA L4",
+  "gpu_count": 1,
+  "gpu_vram_gb": 22.0,
+  "ultralytics": "8.4.116",
+  "experiment": "E10-loco-norway",
+  "stage": "E10",
+  "dataset": "nrdd2024",
+  "dataset_citation": "Kaya, O. & Codur, M. Y., 2024. N-RDD2024: Road damage and defects",
+  "class_set": "all10",
+  "n_classes": 10,
+  "classes": [
+    "longitudinal_crack",
+    "transverse_crack",
+    "alligator_crack",
+    "repaired_crack",
+    "pothole",
+    "pedestrian_crossing_blur",
+    "lane_line_blur",
+    "manhole_cover",
+    "patchy_road",
+    "rutting"
+  ],
+  "classes_dropped": [],
+  "dataset_hash": {
+    "root": "/tmp/data/staged_loco_norway",
+    "sha256": "26123355a0819f1f719571cf33d1b67c71ed87ec39b92b69d6566003e097812d",
+    "n_label_files": 26646,
+    "n_images": 26645
+  },
+  "dataset_yaml": "/tmp/data/staged_loco_norway/dataset_nrdd2024_research.yaml",
+  "imgsz_note": "square 640",
+  "resolved_batch": 16,
+  "finished_at": "2026-08-10T00:04:20.105320+00:00",
+  "best_metric": 0.24668,
+  "results": {
+    "val": {
+      "mAP50": 0.5155480914811774,
+      "mAP50-95": 0.24679406475197435,
+      "precision": 0.5549274922605663,
+      "recall": 0.5109684122532263,
+      "F1": 0.5320414844175376
+    },
+    "val_per_class_AP50": {
+      "longitudinal_crack": 0.6470301023426281,
+      "transverse_crack": 0.5048821203183897,
+      "alligator_crack": 0.622277439612223,
+      "repaired_crack": 0.5093026763941085,
+      "pothole": 0.5862337609109096,
+      "pedestrian_crossing_blur": 0.617246430130457,
+      "lane_line_blur": 0.4461333764113159,
+      "manhole_cover": 0.8443767525712447,
+      "patchy_road": 0.36687875062599246,
+      "rutting": 0.011119505494505497
+    },
+    "test": {
+      "mAP50": 0.03984818450009247,
+      "mAP50-95": 0.012845037041717933,
+      "precision": 0.10651915187708055,
+      "recall": 0.09107082957211282,
+      "F1": 0.09819108697328344
+    },
+    "test_per_class_AP50": {
+      "longitudinal_crack": 0.09046038046180953,
+      "transverse_crack": 0.1136482766883355,
+      "alligator_crack": 0.07209760061390158,
+      "repaired_crack": 0.007307623358708741,
+      "pothole": 0.006048203614845454,
+      "pedestrian_crossing_blur": 0.04173796284852887,
+      "lane_line_blur": 0.0017952361974584103,
+      "manhole_cover": 0.02544501323756935,
+      "patchy_road": 9.336347967482432e-05
+    }
+  },
+  "status": "complete"
+}
