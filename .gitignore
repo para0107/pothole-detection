@@ -93,5 +93,4 @@ landing-redraw
 frontend/src/pages/variants
 .vite
 Weekend2
-frontend/src/pages/variantsruns/research/*/weights/
-*.pt
+runs/research/*/weights/
